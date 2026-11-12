@@ -1,0 +1,4 @@
+psp-gcc -I. -I/usr/local/pspdev/psp/include -I/usr/local/pspdev/psp/sdk/include -O2 -G0 -std=gnu11 -Wall -Wextra -Werror -fno-pic -D_PSP_FW_VERSION=660   -c -o src/main.o src/main.c
+psp-gcc -I. -I/usr/local/pspdev/psp/include -I/usr/local/pspdev/psp/sdk/include -O2 -G0 -std=gnu11 -Wall -Wextra -Werror -fno-pic -D_PSP_FW_VERSION=660  -L. -L/usr/local/pspdev/psp/lib -L/usr/local/pspdev/psp/sdk/lib -Wl,-q,-T/usr/local/pspdev/psp/sdk/lib/linkfile.prx -nostartfiles -Wl,-zmax-page-size=128   src/main.o -nostdlib -lpspsystemctrl_kernel -lpspdebug -lpspdisplay_driver -lpspctrl_driver -lpspmodinfo -lpspsdk -lpspkernel -o pspgo_ds4_pairtest.elf
+psp-fixup-imports pspgo_ds4_pairtest.elf
+psp-prxgen pspgo_ds4_pairtest.elf pspgo_ds4_pairtest.prx

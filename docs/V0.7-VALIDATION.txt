@@ -1,0 +1,1 @@
+Strict PSP GCC15.2.0 build passed. ASan/UBSan host SLC guards, trampoline tests, 120 HID-menu cases passed. Hardware test pending.

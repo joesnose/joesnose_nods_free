@@ -1,0 +1,7 @@
+{
+  "frame": 32,
+  "indirect_calls": 1,
+  "six_arguments_untouched_through_native_call": true,
+  "observer_direct_calls_only_irq_helpers": true,
+  "pass_check": true
+}

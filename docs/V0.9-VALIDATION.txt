@@ -1,0 +1,1 @@
+Strict PSP GCC15.2.0 -Wall -Wextra -Werror build passed. Host ASan/UBSan tests: prior hooks, 120 menu routes, host query, incoming call guards and exact-length tail parsing passed. Guard context/targets matched real loaded capture. Hardware test pending.

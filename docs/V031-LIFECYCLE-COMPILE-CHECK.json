@@ -1,0 +1,25 @@
+{
+  "observers": {
+    "context_remove_trace": {
+      "frame": 16,
+      "min_original_calls_per_return": 1,
+      "max_original_calls_per_return": 1,
+      "direct_calls_only_irq": true
+    },
+    "keyboard_term_trace": {
+      "frame": 24,
+      "min_original_calls_per_return": 1,
+      "max_original_calls_per_return": 1,
+      "direct_calls_only_irq": true
+    },
+    "mouse_term_trace": {
+      "frame": 24,
+      "min_original_calls_per_return": 1,
+      "max_original_calls_per_return": 1,
+      "direct_calls_only_irq": true
+    }
+  },
+  "worker_profiler_frame": 864,
+  "worker_stack_bytes": 8192,
+  "pass_check": true
+}

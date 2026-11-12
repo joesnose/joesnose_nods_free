@@ -1,0 +1,125 @@
+{
+  "hid_stack": {
+    "frames": {
+      "receive_report": 56,
+      "zee_decode_report": 64,
+      "zee_input_update": 16,
+      "zee_input_install": 392
+    },
+    "direct_installer_call": false,
+    "known_direct_path_minimum": 248,
+    "conservative_known_budget_with_allowance": 392,
+    "report_thread_bytes": 1024,
+    "minimum_remaining_bytes": 632,
+    "pass": true
+  },
+  "pair_trace": {
+    "frame": 32,
+    "indirect_calls": 1,
+    "six_arguments_untouched_through_native_call": true,
+    "observer_direct_calls_only_irq_helpers": true,
+    "pass_check": true
+  },
+  "lifecycle_compile": {
+    "observers": {
+      "context_remove_trace": {
+        "frame": 16,
+        "min_original_calls_per_return": 1,
+        "max_original_calls_per_return": 1,
+        "direct_calls_only_irq": true
+      },
+      "keyboard_term_trace": {
+        "frame": 24,
+        "min_original_calls_per_return": 1,
+        "max_original_calls_per_return": 1,
+        "direct_calls_only_irq": true
+      },
+      "mouse_term_trace": {
+        "frame": 24,
+        "min_original_calls_per_return": 1,
+        "max_original_calls_per_return": 1,
+        "direct_calls_only_irq": true
+      }
+    },
+    "worker_profiler_frame": 1032,
+    "worker_stack_bytes": 8192,
+    "pass_check": true
+  },
+  "status_compile": {
+    "wrapper_frame": 40,
+    "original_calls_per_path": [
+      1,
+      1
+    ],
+    "no_file_logging": true,
+    "pass_check": true
+  },
+  "sdp_compile": {
+    "wrapper_frame": 40,
+    "original_calls_per_path": [
+      1,
+      1
+    ],
+    "metadata_helpers_irq_only": true,
+    "withdrawn_entry_observer_absent": true,
+    "pass_check": true
+  },
+  "nes30_compile": {
+    "descriptor_wrapper_frame": 56,
+    "service_command_frame": 32,
+    "seven_argument_saves_restores_present": true,
+    "command_original_calls": [
+      1,
+      1
+    ],
+    "no_native_file_logging": true,
+    "withdrawn_observer_absent": true,
+    "pass_check": true
+  },
+  "completion_compile": {
+    "frames": {
+      "completion_status_receive": 40,
+      "completion_disconnect_receive": 40,
+      "completion_begin": 16,
+      "completion_end": 16
+    },
+    "bridge_frame": 0,
+    "bridge_s2_to_sixth_arg": true,
+    "bridge_s4_to_seventh_arg": true,
+    "original_calls_per_path": [
+      1,
+      1
+    ],
+    "helpers_irq_only": true,
+    "logger_frame": 496,
+    "pass_check": true
+  },
+  "ds4_compile": {
+    "ds4_decoder_frame": 0,
+    "decoder_calls_none": true,
+    "report_callback_frame": 56,
+    "callback_direct_calls_whitelisted": true,
+    "ds4_known_budget_with_native_allowance": 328,
+    "report_thread_bytes": 1024,
+    "pass_check": true
+  },
+  "diag_compile": {
+    "raw_marker_frame": 120,
+    "raw_marker_no_formatter": true,
+    "log_line_frame": 352,
+    "logger_frame": 496,
+    "pass_check": true
+  },
+  "country_compile": {
+    "country_wrapper_frame": 56,
+    "original_tail_once": true,
+    "seven_arguments_preserved": true,
+    "direct_calls_irq_or_metadata_only": true,
+    "pass_check": true
+  },
+  "load_checker": {
+    "pbp_valid": true,
+    "worker_frame": 160,
+    "worker_stack": 16384
+  }
+}

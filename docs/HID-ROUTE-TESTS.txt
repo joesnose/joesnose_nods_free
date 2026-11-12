@@ -1,0 +1,1 @@
+PASS: 120 executable MIPS HID-route cases, preserved registers, profile gating and patch guards

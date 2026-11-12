@@ -1,0 +1,1 @@
+PASS: PIN/no-PIN/profile prologues, relocated address guards, trampoline semantics, jumps and discovery guards

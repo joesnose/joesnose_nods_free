@@ -1,0 +1,8 @@
+/joesnose_nods_free.elf
+/joesnose_nods_free.prx
+/src/*.o
+/exports.c
+/tests/build/
+**/__pycache__/
+*.pyc
+*.log

@@ -1,0 +1,14 @@
+{
+  "frames": {
+    "receive_report": 56,
+    "zee_decode_report": 56,
+    "zee_input_update": 16,
+    "zee_input_install": 392
+  },
+  "direct_installer_call": false,
+  "known_direct_path_minimum": 240,
+  "conservative_known_budget_with_allowance": 384,
+  "report_thread_bytes": 1024,
+  "minimum_remaining_bytes": 640,
+  "pass": true
+}
