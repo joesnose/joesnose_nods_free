@@ -1,44 +1,101 @@
 # joesnose_nods_free
 
-Bluetooth Classic HID controller plugin for PSP Go with ARK. Supports the controllers tested in this project, including DualShock 4, DualSense and 8BitDo NES30 Pro. Other older Bluetooth controllers may work and need further testing. Bluetooth Low Energy controllers are outside this implementation.
+## Overview
+
+A Bluetooth Classic HID controller plugin for PSP Go with ARK. The current v0.64 release removes file logging and uses the filename `joesnose_nods_free.prx`.
+
+## Controller Support
+
+Controllers tested in this project include DualShock 4, DualSense and 8BitDo NES30 Pro. Other older Bluetooth Classic controllers may work and need further testing. Bluetooth Low Energy controllers are outside this implementation.
+
+## Requirements
+
+- A PSP Go running ARK, with 6.61 as the user's tested firmware. Existing runtime guards also recognize the supported 6.60 environment.
+- Access to the PSP's internal storage to install the plugin and update its ARK entries.
+
+## Downloads
 
 [Download v0.64](https://github.com/joesnose/joesnose_nods_free/releases/tag/v0.64) · [PRX](https://raw.githubusercontent.com/joesnose/joesnose_nods_free/f31b3a6c6b1cfc6c66c07edb157bc76eafd50da9/downloads/v0.64/joesnose_nods_free.prx) · [Installation ZIP](https://raw.githubusercontent.com/joesnose/joesnose_nods_free/f31b3a6c6b1cfc6c66c07edb157bc76eafd50da9/downloads/v0.64/joesnose_nods_free-v0.64.zip) · [Source ZIP](https://raw.githubusercontent.com/joesnose/joesnose_nods_free/f31b3a6c6b1cfc6c66c07edb157bc76eafd50da9/downloads/v0.64/joesnose_nods_free-v0.64-source.zip)
 
-The buildable project is at the repository root. Exact v0.64 release files and checksums are also stored in [downloads/v0.64](downloads/v0.64).
+Exact release files and checksums are also available in [downloads/v0.64](downloads/v0.64). The buildable project is at the repository root.
 
-## v0.64
+## Installation
 
-Logging-free release based on the user-confirmed working v0.63 PSP Go Classic HID build. For PSP Go with 6.61 ARK; existing runtime firmware guards also recognize the supported 6.60 environment.
-
-## Install
-
-1. Copy `seplugins/joesnose_nods_free.prx` to `ef0:/seplugins/`.
-2. In your existing ARK plugin list, replace the old `pspgo_hci_transport.prx` filename with `joesnose_nods_free.prx` in both VSH and GAME entries. Use the included reference:
+1. Copy `seplugins/joesnose_nods_free.prx` from the installation ZIP to `ef0:/seplugins/`.
+2. In your existing ARK plugin list, replace the old `pspgo_hci_transport.prx` filename in both VSH and GAME entries:
 
    ```text
    vsh, ef0:/seplugins/joesnose_nods_free.prx, on
    game, ef0:/seplugins/joesnose_nods_free.prx, on
    ```
 
-3. Disable/remove the old plugin entries so only this PRX loads. Fully power off and restart the PSP.
+3. Disable or remove the old plugin entries so only this PRX loads.
+4. Fully power off and restart the PSP.
 
-Keep `ef0:/seplugins/pspgo_hid_controls.txt` and `ef0:/seplugins/pspgo_hid_target.dat`. They retain their existing names so custom controls and the saved target continue working. The included controls file is only a template: do not overwrite your customized file. No re-pairing or EBOOT is needed.
+The same entries are provided in [ARK-plugin-entries.txt](ARK-plugin-entries.txt). No EBOOT or re-pairing is needed for this update.
 
-## Release changes
+## Controller Configuration
 
-- PRX and internal module name: `joesnose_nods_free`.
-- Removed the file-log sink, log pathname and formatter. The compiled sink is inert and cannot call file APIs; no log file is created or updated. An old log can be deleted.
-- Kept the owned controller worker because it maintains keepalive, reconnect, target persistence and Sony link setup. Its diagnostic callback is disabled; this is not a disposable logger thread.
-- Retained the working v0.63 controller mappings, NES30 regression fix, Sony recovery isolation, pairing, configurable controls and reboot reader quiescing. All other implementation files match v0.63; the unused file-log helper was removed.
+Keep these existing files and filenames:
 
-## Review and validation
+- `ef0:/seplugins/pspgo_hid_controls.txt` — custom DS4 and DualSense controls, with separate `[vsh]` and `[game]` sections.
+- `ef0:/seplugins/pspgo_hid_target.dat` — saved controller target.
 
-Reviewed the release diff, native patch guards/bounds, Sony/generic isolation, shutdown quiescing, callback stack checks, control configuration and worker lifetime. No additional defect was identified in that review. This does not establish that the code is free of all hardware-specific issues.
+The included [controls file](pspgo_hid_controls.txt) is a template. Preserve your customized file instead of overwriting it. Fully restart the PSP after editing control bindings.
 
-Forced PSP SDK build and strict warnings pass.34 remaining ASan/UBSan host programs and16 compiled checks pass; the obsolete file-logger test was removed with its helper. The release check verifies no formatter/log-path/log-writer remains and that the only compiled file write is the existing saved-target persistence operation. This renamed logging-free binary has not independently been tested on hardware.
+## Changes in v0.64
 
-## Build from source
+- Renamed the PRX and internal module to `joesnose_nods_free`.
+- Removed file logging and its formatter. No log file is created or updated; an old log can be deleted.
+- Retained the controller worker for keepalive, reconnect, target persistence and Sony link setup.
+- Retained v0.63 controller mappings, the NES30 regression fix, Sony recovery isolation, pairing, configurable controls and reboot reader quiescing.
 
-With PSPSDK and the ARK systemctrl development library available, run `make -B release` from the source project directory. Output: `joesnose_nods_free.prx`. Run host tests with `sh tests/run.sh`; compiled validation tools accept `joesnose_nods_free.elf` as their argument.
+The controller implementation files other than `main.c` match v0.63. The unused file-log helper was removed.
 
-Own source only; no Sony firmware, private logs, keys or device identities are included.
+## Building from Source
+
+Install PSPSDK and the ARK systemctrl development library, then run this command from the repository root:
+
+```sh
+make -B release
+```
+
+The output is `joesnose_nods_free.prx`.
+
+## Testing and Validation
+
+Run the host tests from the repository root:
+
+```sh
+sh tests/run.sh
+```
+
+Compiled validation scripts in `tools/` accept `joesnose_nods_free.elf` as their argument. For example:
+
+```sh
+python tools/check_diag_compile.py joesnose_nods_free.elf
+```
+
+The forced PSP SDK build passes with strict warnings. All 34 remaining ASan/UBSan host programs and 16 compiled checks pass. The obsolete file-logger test was removed with its helper. The logging check verifies that the formatter and log paths are absent, the logging sink is inactive, and the only compiled file write is saved-target persistence.
+
+Source review covered native patch guards and bounds, Sony/generic isolation, shutdown quiescing, callback stack constraints, control configuration and worker lifetime. No additional defect was identified. v0.64 is based on the user-confirmed working v0.63 build; the renamed logging-free binary has not independently been tested on hardware.
+
+## Repository Structure
+
+| Location | Contents |
+| --- | --- |
+| `src/` | Plugin source code and controller handling |
+| `tests/` | Host tests and controller fixtures |
+| `tools/` | Compiled-code and stack validation scripts |
+| `docs/` | Historical research, implementation notes and validation records |
+| `notices/` | Third-party notices |
+| `downloads/v0.64/` | Exact release files and checksums |
+| `Makefile` | PSP build configuration |
+| `ARK-plugin-entries.txt` | Installation entry reference |
+| `pspgo_hid_controls.txt` | Controller configuration template |
+
+## License
+
+The project uses the [MIT License](LICENSE). Third-party notices are in [notices/](notices/).
+
+No Sony firmware, private logs, keys or device identities are included.
