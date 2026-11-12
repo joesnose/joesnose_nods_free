@@ -2,7 +2,7 @@
 
 Bluetooth Classic HID controller plugin for PSP Go with ARK. Supports the controllers tested in this project, including DualShock 4, DualSense and 8BitDo NES30 Pro. Other older Bluetooth controllers may work and need further testing. Bluetooth Low Energy controllers are outside this implementation.
 
-[Download v0.64](https://github.com/joesnose/joesnose_nods_free/releases/tag/v0.64) · [PRX](https://github.com/joesnose/joesnose_nods_free/releases/download/v0.64/joesnose_nods_free.prx) · [Installation ZIP](https://github.com/joesnose/joesnose_nods_free/releases/download/v0.64/joesnose_nods_free-v0.64.zip) · [Source ZIP](https://github.com/joesnose/joesnose_nods_free/releases/download/v0.64/joesnose_nods_free-v0.64-source.zip)
+[Download v0.64](https://github.com/joesnose/joesnose_nods_free/releases/tag/v0.64) · [PRX](https://raw.githubusercontent.com/joesnose/joesnose_nods_free/f31b3a6c6b1cfc6c66c07edb157bc76eafd50da9/downloads/v0.64/joesnose_nods_free.prx) · [Installation ZIP](https://raw.githubusercontent.com/joesnose/joesnose_nods_free/f31b3a6c6b1cfc6c66c07edb157bc76eafd50da9/downloads/v0.64/joesnose_nods_free-v0.64.zip) · [Source ZIP](https://raw.githubusercontent.com/joesnose/joesnose_nods_free/f31b3a6c6b1cfc6c66c07edb157bc76eafd50da9/downloads/v0.64/joesnose_nods_free-v0.64-source.zip)
 
 The buildable project is at the repository root. Exact v0.64 release files and checksums are also stored in [downloads/v0.64](downloads/v0.64).
 
