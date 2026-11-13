@@ -1,2 +1,4 @@
+# ARK installation entries for joesnose_nods_free
+# Replace the old plugin entries; enable only one copy of the plugin.
 vsh, ef0:/seplugins/joesnose_nods_free.prx, on
 game, ef0:/seplugins/joesnose_nods_free.prx, on
