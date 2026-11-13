@@ -4,7 +4,9 @@
 
 ## Overview
 
-A Bluetooth HID controller plugin for PSP Go.
+A Bluetooth HID controller plugin for PSP Go. Built with AI.
+
+It make come with quirks and absolutely no guarentee. sometimes connection attempts fail, DualSense and DS4 sometimes have a few seconds lag at startup but soon catch up........happy gaming.
 
 ## Controller Support
 
