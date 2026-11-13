@@ -1,5 +1,7 @@
 # joesnose_nods_free
 
+[Downloads](#downloads) · [Installation](#installation) · [Controller Configuration](#controller-configuration) · [Building](#building-from-source)
+
 ## Overview
 
 A Bluetooth Classic HID controller plugin for PSP Go with ARK. The current v0.64 release removes file logging and uses the filename `joesnose_nods_free.prx`.
