@@ -1,8 +1,13 @@
+# Generated PSP build files
 /joesnose_nods_free.elf
 /joesnose_nods_free.prx
 /src/*.o
 /exports.c
+
+# Generated host-test executables
 /tests/build/
+
+# Python caches and diagnostic logs
 **/__pycache__/
 *.pyc
 *.log
