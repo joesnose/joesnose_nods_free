@@ -4,7 +4,7 @@
 
 ## Overview
 
-A Bluetooth Classic HID controller plugin for PSP Go.
+A Bluetooth HID controller plugin for PSP Go.
 
 ## Controller Support
 
@@ -13,8 +13,8 @@ Controllers tested in this project include DualShock 4, DualSense and 8BitDo NES
 ## Requirements
 
 - A PSPGO, only tested on ARK custom firmware.
-- A DualShock4 or Dualsense controller.
-- Also compatible with 8bitdo nes30 pro and steel series zeemote.
+- nods free plugin
+- A compatible controller. I know it works with Dualshock4, Dualsense, 8bitdo nes30 pro, Steel series zeemote and the controller for the original Gamestick. It may work with other but these all required individual per controller tweaking.
 
 ## Downloads
 
