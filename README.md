@@ -4,7 +4,7 @@
 
 ## Overview
 
-A Bluetooth Classic HID controller plugin for PSP Go with ARK. The current v0.64 release removes file logging and uses the filename `joesnose_nods_free.prx`.
+A Bluetooth Classic HID controller plugin for PSP Go.
 
 ## Controller Support
 
@@ -12,8 +12,9 @@ Controllers tested in this project include DualShock 4, DualSense and 8BitDo NES
 
 ## Requirements
 
-- A PSP Go running ARK, with 6.61 as the user's tested firmware. Existing runtime guards also recognize the supported 6.60 environment.
-- Access to the PSP's internal storage to install the plugin and update its ARK entries.
+- A PSPGO, only tested on ARK custom firmware.
+- A DualShock4 or Dualsense controller.
+- Also compatible with 8bitdo nes30 pro and steel series zeemote.
 
 ## Downloads
 
