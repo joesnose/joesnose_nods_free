@@ -1,3 +1,5 @@
+# PSP build configuration for joesnose_nods_free.prx
+# Build from the repository root with: make -B release
 TARGET = joesnose_nods_free
 OBJS = src/main.o src/completion_bridge.o src/zeemote_hid.o src/ds4_basic.o src/sony_controls.o src/zeemote_hooks.o src/zeemote_input.o
 PSP_FW_VERSION = 660
