@@ -1,3 +1,5 @@
+# joesnose_nods_free controller configuration template
+# Keep your existing custom bindings when updating the plugin.
 # DS4 / DualSense controls. Edit then fully restart the PSP.
 # Select preset = standard or fps. Uncomment only the overrides you want.
 # Commented bindings below show each preset's defaults; later overrides win.
