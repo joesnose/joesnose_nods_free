@@ -1,0 +1,25 @@
+{
+  "variant": "nods_lme_clean_0.70",
+  "base_commit": "16c9267a42fec2ab30e1a3c6e85c285f927a98ab",
+  "target": "6.60 LME PSP Go DS4",
+  "scope": "v0.69 verified hook sources unchanged; main-only removal of diagnostic logging and version update",
+  "host_tests": "tests/run.sh ASan/UBSan passed",
+  "psp_build": "passed with -Werror",
+  "compiled_checks": {
+    "frames": {
+      "receive_report": 56,
+      "zee_decode_report": 64,
+      "zee_input_update_kind": 24,
+      "zee_input_install": 440,
+      "sony_controls_decode": 64,
+      "ds4_basic_decode": 0
+    },
+    "direct_installer_call": false,
+    "known_direct_path_minimum": 248,
+    "conservative_known_budget_with_allowance": 400,
+    "report_thread_bytes": 1024,
+    "minimum_remaining_bytes": 624,
+    "pass": true
+  },
+  "hardware": "v0.69 base user-confirmed XMB/Daxter/HOME on 6.60 LME PSP Go; exact v0.70 binary pending"
+}

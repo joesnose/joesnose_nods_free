@@ -1,0 +1,397 @@
+diff --git a/Makefile b/Makefile
+index 747a2cc..462563e 100644
+--- a/Makefile
++++ b/Makefile
+@@ -1,6 +1,6 @@
+ # PSP build configuration for joesnose_nods_free.prx
+ # Build from the repository root with: make -B release
+-TARGET = joesnose_nods_free
++TARGET = joesnose_nods_free_LME
+ OBJS = src/main.o src/completion_bridge.o src/zeemote_hid.o src/ds4_basic.o src/sony_controls.o src/zeemote_hooks.o src/zeemote_input.o
+ PSP_FW_VERSION = 660
+ BUILD_PRX = 1
+diff --git a/src/main.c b/src/main.c
+index 60fccb6..aec162e 100644
+--- a/src/main.c
++++ b/src/main.c
+@@ -31,7 +31,7 @@
+ #include "ds4_transition.h"
+ #include "service_trace.h"
+ #include "zeemote_input.h"
+-PSP_MODULE_INFO("joesnose_nods_free",PSP_MODULE_KERNEL,0,64);
++PSP_MODULE_INFO("joesnose_nods_free_LME",PSP_MODULE_KERNEL,0,70);
+ /* Release build: no diagnostic file output or formatting. Keep the worker
+  * because it also owns reconnect, persistence and controller keepalive. */
+ static STMOD_HANDLER previous_handler;
+@@ -953,7 +953,7 @@ static int home_thread(SceSize args,void *argp){
+ int module_start(SceSize args,void *argp){
+  (void)args;(void)argp;
+  unsigned fw=sceKernelDevkitVersion();int model=sceKernelGetModel();
+- log_line("\nPSPGo Classic HID clean-baseline route 0.64 model=%d devkit=%08x\n",model,fw);
++ log_line("\nPSPGo Classic HID LME LME clean 0.70 (base 0.64) model=%d devkit=%08x\n",model,fw);
+  if(model!=4||(fw!=0x06060010&&fw!=0x06060110)){
+   log_line("UNSUPPORTED model/firmware; no patches installed\n");return -1;
+  }
+diff --git a/src/vsh_input_plan.h b/src/vsh_input_plan.h
+index 0527e85..f16eaa6 100644
+--- a/src/vsh_input_plan.h
++++ b/src/vsh_input_plan.h
+@@ -42,4 +42,23 @@ static inline int vsh_input_plan(uint32_t base,uint32_t size,uint32_t exported,
+  if(stub[0]!=original_stub||stub[1]!=0)return -3;
+  *patched=redirect|0x04000000u;return 0;
+ }
++/* LME's VshControl patches the CALL at +25c directly, rather than the
++ * stock import stub. Verify every other instruction and preserve its callee.
++ * Callers must establish that lme_base/size belong to the named VshControl. */
++static inline int vsh_input_lme_plan(uint32_t base,uint32_t size,uint32_t exported,
++ uint32_t ctrl,uint32_t lme_base,uint32_t lme_size,uint32_t hook,
++ const uint32_t context[VSH_INPUT_CONTEXT_WORDS],const uint32_t stub[2],
++ uint32_t *original,uint32_t *patched){
++ if(!context||!stub||!original||!patched||(context[23]>>26)!=3)return -1;
++ uint32_t jump_stub[2]={context[23]&~0x04000000u,0},callee;
++ // Reuse strict kernel module bounds; reject stock-target fallback here.
++ if(vsh_input_stub_target(base,0,lme_base,lme_size,jump_stub,&callee)||callee==0)return -2;
++ uint32_t normalized[VSH_INPUT_CONTEXT_WORDS],stock_call;
++ memcpy(normalized,context,sizeof(normalized));
++ if(vsh_input_jump(base+0x25c,base+0x5608,&stock_call))return -3;
++ normalized[23]=stock_call|0x04000000u;
++ int result=vsh_input_plan(base,size,exported,ctrl,hook,normalized,stub,patched);
++ if(result)return result;
++ *original=callee;return 0;
++}
+ #endif
+diff --git a/src/zeemote_hooks.c b/src/zeemote_hooks.c
+index 09cb0dc..6302039 100644
+--- a/src/zeemote_hooks.c
++++ b/src/zeemote_hooks.c
+@@ -215,6 +215,15 @@ int zeemote_ds4_install_read_trace(SceModule *m,ZeeLogger log){
+  sceKernelCpuResumeIntr(irq);if(log)log(valid?"DS4_READ_TRACE installed: metadata only before composite routing; original read unchanged\n":"DS4_READ_TRACE skipped: native context mismatch\n");return valid?1:-1;
+ }
+ int zeemote_input_ready(void){return installed_base!=0;}
++void zeemote_diagnostic_state(unsigned out[9]){
++ if(!out)return;
++ int irq=sceKernelCpuSuspendIntr();
++ out[0]=installed_base;out[1]=counters.descriptors;out[2]=counters.layouts;
++ out[3]=counters.initialized;out[4]=counters.reports;out[5]=counters.invalid;
++ out[6]=counters.unmatched;out[7]=counters.capacity;out[8]=counters.busy;
++ sceKernelCpuResumeIntr(irq);
++}
++
+ void zeemote_input_log_tick(ZeeLogger log){
+  /* Native lifecycle monitoring, not an RF heartbeat: unchanged HID reports
+   * may legitimately stop while a button remains held. Keepalive never creates
+diff --git a/src/zeemote_hooks.h b/src/zeemote_hooks.h
+index 4b9c4e8..8a6a5e4 100644
+--- a/src/zeemote_hooks.h
++++ b/src/zeemote_hooks.h
+@@ -10,6 +10,7 @@ typedef int (*ZeeDs4Authorize)(const void *);
+ void zeemote_ds4_set_authorizer(ZeeDs4Authorize);
+ int zeemote_ds4_install_read_trace(SceModule *,ZeeLogger);
+ int zeemote_input_ready(void);
++void zeemote_diagnostic_state(unsigned out[9]);
+ int zeemote_gamestick_authorized(void);
+ int zeemote_sony_context_owned(const void *);
+ int zeemote_sony_quiesce_context(const void *);
+diff --git a/src/zeemote_input.c b/src/zeemote_input.c
+index 74665e9..080832c 100644
+--- a/src/zeemote_input.c
++++ b/src/zeemote_input.c
+@@ -17,6 +17,7 @@ void sceKernelIcacheInvalidateAll(void);
+ #include "zeemote_input.h"
+ #include "vsh_input_plan.h"
+ #include "home_button.h"
++#include "ctrl_entry_plan.h"
+ static ZeeState remote;
+ static unsigned remote_sony;
+ static ZeeHomeButton home_button;static int home_enabled;
+@@ -73,6 +74,43 @@ static int peek_neg(SceCtrlData *p,int n){return merge(1,p,n);}
+ static int read_pos(SceCtrlData *p,int n){return merge(2,p,n);}
+ static int read_neg(SceCtrlData *p,int n){return merge(3,p,n);}
+ static int vsh_read_pos(SceCtrlData *p,int n){return merge(4,p,n);}
++static int game_entry_mode=1,game_entry_installed;
++static uint32_t game_trampolines[4][4] __attribute__((aligned(16)));
++static uint32_t game_entry_addresses[4],game_expected_jumps[4];
++void zee_input_game_entry_diagnostic(unsigned out[17]){
++ if(!out)return;
++ memset(out,0,17*sizeof(*out));out[0]=game_entry_installed;
++ SceModule *ctrl=sceKernelFindModuleByName("sceController_Service");
++ for(unsigned i=0;i<4;i++){
++  uint32_t a=game_entry_addresses[i];out[1+i]=a;out[5+i]=game_expected_jumps[i];
++  if(ctrl&&a>=ctrl->text_addr&&ctrl->text_size>=8&&a-ctrl->text_addr<=ctrl->text_size-8){out[9+i]=_lw(a);out[13+i]=_lw(a+4);}
++ }
++}
++static int InstallGameEntries(SceModule *ctrl,uint32_t base,uint32_t size,Read targets[5],const Read hooks[4]){
++ uint32_t entries[4],words[4][8],hook_addresses[4],trampoline_addresses[4];NodsCtrlEntryPlan plan;
++ if(size<32)return install_fail(8,0);
++ for(unsigned i=0;i<4;i++){
++  entries[i]=(uint32_t)(uintptr_t)targets[i];
++  if(entries[i]<base||entries[i]-base>size-32)return install_fail(8,i);
++  for(unsigned j=0;j<8;j++)words[i][j]=_lw(entries[i]+j*4);
++  hook_addresses[i]=code_address((void *)hooks[i]);trampoline_addresses[i]=code_address(game_trampolines[i]);
++ }
++ int result=nods_ctrl_entry_plan(base,size,entries,words,hook_addresses,trampoline_addresses,&plan);
++ if(result)return install_fail(8,(unsigned)-result);
++ int irq=sceKernelCpuSuspendIntr();
++ if(ctrl->text_addr!=base||ctrl->text_size!=size){sceKernelCpuResumeIntr(irq);return install_fail(5,0);}
++ for(unsigned i=0;i<4;i++)for(unsigned j=0;j<8;j++)if(_lw(entries[i]+j*4)!=words[i][j]){sceKernelCpuResumeIntr(irq);return install_fail(6,i);}
++ for(unsigned i=0;i<4;i++){
++  memcpy(game_trampolines[i],plan.trampoline[i],sizeof(game_trampolines[i]));
++  originals[i]=(Read)(uintptr_t)game_trampolines[i];game_entry_addresses[i]=entries[i];game_expected_jumps[i]=plan.patch[i];
++ }
++ // All guards pass before any entry is changed. Hooks/trampolines stay resident.
++ sceKernelDcacheWritebackAll();sceKernelIcacheInvalidateAll();
++ for(unsigned i=0;i<4;i++){_sw(plan.patch[i],entries[i]);_sw(0,entries[i]+4);}
++ sceKernelDcacheWritebackAll();sceKernelIcacheInvalidateAll();
++ game_entry_installed=installed=1;install_error=0;guard_index=~0u;
++ sceKernelCpuResumeIntr(irq);return 0;
++}
+ int zee_input_install(void){
+  if(installed)return 0;
+  if(install_attempts>=4)return -1;
+@@ -98,6 +136,7 @@ int zee_input_install(void){
+  /* Games call the four public controller syscalls. VSH bridge and VshCtrl
+   * are not prerequisites here. Preserve ARK's current Ctrl entry chain. */
+  if(mode==0x200u){
++  if(game_entry_mode)return InstallGameEntries(ctrl,cb,cs,targets,hooks);
+   int irq=sceKernelCpuSuspendIntr();
+   if(installed){sceKernelCpuResumeIntr(irq);return 0;}
+   if(ctrl->text_addr!=cb||ctrl->text_size!=cs){sceKernelCpuResumeIntr(irq);return install_fail(5,~0u);}
+@@ -112,19 +151,28 @@ int zee_input_install(void){
+  if(b>0xffffffffu-size||size<0x5610u)return install_fail(3,~0u);
+  uint32_t exported=(uint32_t)sctrlHENFindFunction("sceVshBridge_Driver","sceVshBridge",0xc6395c03);
+  SceModule *ark=sceKernelFindModuleByName("VshCtrl");
++ SceModule *lme=ark?NULL:sceKernelFindModuleByName("VshControl");
++ uint32_t lb=lme?lme->text_addr:0,ls=lme?lme->text_size:0;
+  uint32_t ab=ark?ark->text_addr:0,as=ark?ark->text_size:0;
+  uint32_t snapshot[VSH_INPUT_CONTEXT_WORDS],stub[2],patched,stub_target;
+  for(unsigned i=0;i<VSH_INPUT_CONTEXT_WORDS;i++)snapshot[i]=_lw(b+0x200+i*4);
+  stub[0]=_lw(b+0x5608);stub[1]=_lw(b+0x560c);
+- if(vsh_input_stub_target(b,(uint32_t)(uintptr_t)targets[2],ab,as,stub,&stub_target)){
+-  install_attempts=4;return install_fail(4,5);
++ uint32_t preserved_call=b+0x5608,stock_vsh_call;int plan;
++ if(vsh_input_jump(b+0x25c,b+0x5608,&stock_vsh_call))return install_fail(4,5);
++ if(lme&&snapshot[23]!=(stock_vsh_call|0x04000000u)){
++  plan=vsh_input_lme_plan(b,size,exported,(uint32_t)(uintptr_t)targets[2],lb,ls,
++    code_address((void *)vsh_read_pos),snapshot,stub,&preserved_call,&patched);
++ }else{
++  if(vsh_input_stub_target(b,(uint32_t)(uintptr_t)targets[2],ab,as,stub,&stub_target)){
++   install_attempts=4;return install_fail(4,5);
++  }
++  plan=vsh_input_plan(b,size,exported,stub_target,code_address((void *)vsh_read_pos),snapshot,stub,&patched);
+  }
+- int plan=vsh_input_plan(b,size,exported,stub_target,code_address((void *)vsh_read_pos),snapshot,stub,&patched);
+  if(plan){install_attempts=4;return install_fail(4,(unsigned)-plan);}
+- targets[4]=(Read)(uintptr_t)(b+0x5608);
++ targets[4]=(Read)(uintptr_t)preserved_call;
+  int irq=sceKernelCpuSuspendIntr();
+  if(installed){sceKernelCpuResumeIntr(irq);return 0;}
+- if((ark&&(ark->text_addr!=ab||ark->text_size!=as))||ctrl->text_addr!=cb||ctrl->text_size!=cs||bridge->text_addr!=b||bridge->text_size!=size){sceKernelCpuResumeIntr(irq);return install_fail(5,~0u);}
++ if((lme&&(lme->text_addr!=lb||lme->text_size!=ls))||(ark&&(ark->text_addr!=ab||ark->text_size!=as))||ctrl->text_addr!=cb||ctrl->text_size!=cs||bridge->text_addr!=b||bridge->text_size!=size){sceKernelCpuResumeIntr(irq);return install_fail(5,~0u);}
+  for(unsigned i=0;i<VSH_INPUT_CONTEXT_WORDS;i++)if(_lw(b+0x200+i*4)!=snapshot[i]){
+   sceKernelCpuResumeIntr(irq);return install_fail(6,4);
+  }
+diff --git a/src/zeemote_input.h b/src/zeemote_input.h
+index b3cffa5..aa2fb18 100644
+--- a/src/zeemote_input.h
++++ b/src/zeemote_input.h
+@@ -3,6 +3,7 @@
+ #include "zeemote_hid.h"
+ typedef struct {unsigned overlay_installed,installed,active,vsh_installed,vsh_reads,reads[4],merged_samples,install_error,guard_index,seen_buttons,motion_seen,last_buttons,lx,ly,min_lx,max_lx,min_ly,max_ly;} ZeeInputStats;
+ void zee_input_stats(ZeeInputStats *stats);
++void zee_input_game_entry_diagnostic(unsigned out[17]);
+ /* Five-second aggregate, never payloads. Age starts at host report receipt,
+  * not physical button press, and cannot measure over-the-air queue delay. */
+ typedef struct {unsigned reports,gaps,gap_max_us,samples,age_max_us,stale;uint64_t gap_total_us,age_total_us;} ZeeInputTiming;
+diff --git a/tests/test_vsh_input_plan.c b/tests/test_vsh_input_plan.c
+index e3e41ba..cf5c8af 100644
+--- a/tests/test_vsh_input_plan.c
++++ b/tests/test_vsh_input_plan.c
+@@ -72,6 +72,13 @@ int main(void){
+  st[1]=1;assert(vsh_input_stub_target(vb,ctrl_read,0x88340000,0x8000,st,&dest)<0);
+  st[1]=0;st[0]|=0x04000000;assert(vsh_input_stub_target(vb,ctrl_read,0x88340000,0x8000,st,&dest)<0);
+ 
++ uint32_t lc[34],ls[2],lp,original;fixture(lc,ls);
++ uint32_t lj;assert(!vsh_input_jump(vb+0x25c,0x88340100,&lj));lc[23]=lj|0x04000000u;
++ assert(!vsh_input_lme_plan(vb,0x6aa8,vb+0x200,ctrl_read,0x88340000,0x8000,hook_address,lc,ls,&original,&lp)&&original==0x88340100);
++ for(unsigned i=0;i<34;i++)if(i!=23){lc[i]^=1;assert(vsh_input_lme_plan(vb,0x6aa8,vb+0x200,ctrl_read,0x88340000,0x8000,hook_address,lc,ls,&original,&lp)<0);lc[i]^=1;}
++ assert(vsh_input_lme_plan(vb,0x6aa8,vb+0x200,ctrl_read,0x08340000,0x8000,hook_address,lc,ls,&original,&lp)<0);
++ assert(vsh_input_lme_plan(vb,0x6aa8,vb+0x200,ctrl_read,0x88340200,0x8000,hook_address,lc,ls,&original,&lp)<0);
++ ls[1]=1;assert(vsh_input_lme_plan(vb,0x6aa8,vb+0x200,ctrl_read,0x88340000,0x8000,hook_address,lc,ls,&original,&lp)<0);
+  uint32_t c[34],s[2],patched;fixture(c,s);assert(!vsh_input_plan(vb,0x6aa8,vb+0x200,ctrl_read,hook_address,c,s,&patched));
+  for(unsigned i=0;i<34;i++){c[i]^=1;assert(vsh_input_plan(vb,0x6aa8,vb+0x200,ctrl_read,hook_address,c,s,&patched)<0);c[i]^=1;}
+  for(unsigned i=0;i<2;i++){s[i]^=1;assert(vsh_input_plan(vb,0x6aa8,vb+0x200,ctrl_read,hook_address,c,s,&patched)<0);s[i]^=1;}
+diff --git a/tests/test_zeemote_input.c b/tests/test_zeemote_input.c
+index 6e27e17..3e8afb5 100644
+--- a/tests/test_zeemote_input.c
++++ b/tests/test_zeemote_input.c
+@@ -4,25 +4,33 @@
+ #include "test_vsh_input_plan.c"
+ #undef main
+ static uint64_t time_us;static unsigned syscall_patches,code_writes;
+-static int original_result=1,native_calls,mutate_on_irq,alias_bad,missing_bridge,ark_present;
++static int original_result=1,native_calls,mutate_on_irq,alias_bad,missing_bridge,ark_present,lme_present;
+ static unsigned app_mode=0x100;
+ static unsigned physical,firmware=0x06060010;
+ static uint32_t bridge_words[0x6000/4];
+-static uint32_t impose_words[2];
++static uint32_t impose_words[2],game_words[4][8];
++static int mutate_game;
+ static int impose_present,impose_bad_stub;
+ static SceModule impose_module={0x88380000,0xc300};
+ static SceModule ark_module={0x88340000,0x8000};
+ static SceModule ctrl_module={0x880e6200,0x2850},bridge_module={0x88200000,0x6aa8};
++static int game_word_index(uint32_t a,unsigned *i,unsigned *j){
++ for(unsigned n=0;n<4;n++){uint32_t b=ctrl_module.text_addr+0x1ae0+n*32;if(a>=b&&a<b+32&&!(a&3)){*i=n;*j=(a-b)/4;return 1;}}return 0;
++}
+ unsigned sceKernelGetSystemTimeLow(void){return (unsigned)time_us;}
+-int sceKernelCpuSuspendIntr(void){if(mutate_on_irq){bridge_words[0x25c/4]^=1;mutate_on_irq=0;}return 0;}
++int sceKernelCpuSuspendIntr(void){if(mutate_game){game_words[0][0]^=1;mutate_game=0;}if(mutate_on_irq){bridge_words[0x25c/4]^=1;mutate_on_irq=0;}return 0;}
+ void sceKernelCpuResumeIntr(int x){(void)x;}
+ void sceKernelDcacheWritebackAll(void){}void sceKernelIcacheInvalidateAll(void){}
+-SceModule *sceKernelFindModuleByName(const char *n){if(!strcmp(n,"sceController_Service"))return &ctrl_module;if(!strcmp(n,"sceImpose_Driver"))return impose_present?&impose_module:NULL;if(!strcmp(n,"VshCtrl"))return ark_present?&ark_module:NULL;assert(!strcmp(n,"sceVshBridge_Driver"));return missing_bridge?NULL:&bridge_module;}
++SceModule *sceKernelFindModuleByName(const char *n){if(!strcmp(n,"sceController_Service"))return &ctrl_module;if(!strcmp(n,"sceImpose_Driver"))return impose_present?&impose_module:NULL;if(!strcmp(n,"VshCtrl"))return ark_present?&ark_module:NULL;if(!strcmp(n,"VshControl"))return lme_present?&ark_module:NULL;assert(!strcmp(n,"sceVshBridge_Driver"));return missing_bridge?NULL:&bridge_module;}
+ unsigned sceKernelDevkitVersion(void){return firmware;}
+ unsigned sceKernelInitKeyConfig(void){return app_mode;}
+-uint32_t _lw(uint32_t a){if(a>=0x8838b290&&a<=0x8838b294)return impose_words[(a-0x8838b290)/4];assert(app_mode==0x100);assert(a>=vb&&a<vb+sizeof(bridge_words)&&!(a&3));return bridge_words[(a-vb)/4];}
+-void _sw(uint32_t w,uint32_t a){if(a==0x8838b290){impose_words[0]=w;code_writes++;return;}assert(app_mode==0x100);assert(a==vb+0x25c);bridge_words[(a-vb)/4]=w;code_writes++;}
+-uint32_t zee_test_code_address(const void *p){assert(p==(void *)vsh_read_pos||p==(void *)peek_pos);return hook_address;}
++uint32_t _lw(uint32_t a){unsigned gi,gj;if(game_word_index(a,&gi,&gj))return game_words[gi][gj];if(a>=0x8838b290&&a<=0x8838b294)return impose_words[(a-0x8838b290)/4];assert(app_mode==0x100);assert(a>=vb&&a<vb+sizeof(bridge_words)&&!(a&3));return bridge_words[(a-vb)/4];}
++void _sw(uint32_t w,uint32_t a){unsigned gi,gj;if(game_word_index(a,&gi,&gj)){assert(app_mode==0x200&&gj<2);game_words[gi][gj]=w;code_writes++;return;}if(a==0x8838b290){impose_words[0]=w;code_writes++;return;}assert(app_mode==0x100);assert(a==vb+0x25c);bridge_words[(a-vb)/4]=w;code_writes++;}
++uint32_t zee_test_code_address(const void *p){
++ Read h[]={peek_pos,peek_neg,read_pos,read_neg};
++ for(unsigned i=0;i<4;i++){if(p==(void *)h[i])return hook_address+i*0x100;if(p==game_trampolines[i])return hook_address+0x1000+i*16;}
++ assert(p==(void *)vsh_read_pos);return hook_address;
++}
+ static int native_read(SceCtrlData *p,int n){native_calls++;if(original_result>0&&n>0){memset(p,0,sizeof(*p));p->Buttons=physical;p->Lx=128;p->Ly=128;}return original_result;}
+ uintptr_t sctrlHENFindFunction(const char *module,const char *library,uint32_t nid){
+  if(!strcmp(module,"sceVshBridge_Driver")){assert(!strcmp(library,"sceVshBridge")&&nid==0xc6395c03);return vb+0x200;}
+@@ -37,10 +45,47 @@ void sctrlHENPatchSyscall(void *from,void *to){
+ }
+ uint32_t sctrlFindImportByNID(SceModule *m,char *lib,unsigned nid){assert(m==&impose_module&&!strcmp(lib,"sceCtrl_driver")&&nid==0x2ba616af);return impose_bad_stub?impose_module.text_addr+impose_module.text_size:0x8838b290;}
+ static void setup(void){
+- overlay_installed=overlay_attempts=0;impose_present=impose_bad_stub=0;installed=vsh_installed=0;install_attempts=0;app_mode=0x100;syscall_patches=code_writes=0;ark_present=0;alias_bad=missing_bridge=mutate_on_irq=0;firmware=0x06060010;
++ game_entry_mode=game_entry_installed=mutate_game=0;memset(game_entry_addresses,0,sizeof(game_entry_addresses));
++ for(unsigned i=0;i<4;i++){
++  uint32_t a=ctrl_module.text_addr+0x1ae0+i*32,j;
++  assert(!vsh_input_jump(a+12,ctrl_module.text_addr+0x1e70,&j));
++  uint32_t w[8]={0x27bdfff0,0x3021,0xafbf0000,j|0x04000000u,i?0x24070000u+i:0x3821,0x8fbf0000,0x03e00008,0x27bd0010};
++  memcpy(game_words[i],w,sizeof(w));
++ }
++
++ overlay_installed=overlay_attempts=0;impose_present=impose_bad_stub=0;installed=vsh_installed=0;install_attempts=0;app_mode=0x100;syscall_patches=code_writes=0;ark_present=lme_present=0;alias_bad=missing_bridge=mutate_on_irq=0;firmware=0x06060010;
+  memset(bridge_words,0,sizeof(bridge_words));uint32_t c[34],s[2];fixture(c,s);memcpy(&bridge_words[0x200/4],c,sizeof(c));memcpy(&bridge_words[0x5608/4],s,sizeof(s));
+ }
+ int main(void){
++ assert(game_entry_mode==1);
++ setup();app_mode=0x200;game_entry_mode=1;missing_bridge=1;
++ assert(zee_input_install()==0&&installed&&game_entry_installed&&code_writes==8&&syscall_patches==0);
++ for(unsigned i=0;i<4;i++){
++  assert(game_words[i][0]==game_expected_jumps[i]&&game_words[i][1]==0);
++  assert(game_trampolines[i][0]==0x27bdfff0&&game_trampolines[i][1]==0x3021&&game_trampolines[i][3]==0);
++  assert(originals[i]==(Read)(uintptr_t)game_trampolines[i]);
++ }
++ unsigned diagnostic[17];zee_input_game_entry_diagnostic(diagnostic);assert(diagnostic[0]==1);
++ for(unsigned i=0;i<4;i++)assert(diagnostic[5+i]==diagnostic[9+i]&&!diagnostic[13+i]);
++ assert(zee_input_install()==0&&code_writes==8);
++ for(unsigned i=0;i<4;i++)for(unsigned j=0;j<8;j++){
++  setup();app_mode=0x200;game_entry_mode=1;game_words[i][j]^=1;
++  assert(zee_input_install()<0&&!code_writes&&!syscall_patches&&!installed);
++ }
++ setup();app_mode=0x200;game_entry_mode=1;mutate_game=1;
++ assert(zee_input_install()<0&&!code_writes&&!syscall_patches&&!installed);
++
++ setup();lme_present=1;assert(zee_input_install()==0&&vsh_installed&&(uintptr_t)originals[4]==vb+0x5608);
++ setup();lme_present=1;uint32_t lme_call;
++ assert(!vsh_input_jump(vb+0x25c,ark_module.text_addr+0x100,&lme_call));
++ bridge_words[0x25c/4]=lme_call|0x04000000u;
++ assert(zee_input_install()==0&&installed&&vsh_installed&&syscall_patches==4&&code_writes==1);
++ assert((uintptr_t)originals[4]==ark_module.text_addr+0x100);
++ setup();lme_present=1;bridge_words[0x25c/4]=lme_call|0x04000000u;bridge_words[0x260/4]=1;
++ assert(zee_input_install()<0&&!syscall_patches&&!code_writes);
++ setup();lme_present=1;bridge_words[0x25c/4]=lme_call|0x04000000u;mutate_on_irq=1;
++ assert(zee_input_install()<0&&!syscall_patches&&!code_writes);
++
+  setup();uint32_t saved_stub[2];memcpy(saved_stub,&bridge_words[0x5608/4],sizeof(saved_stub));
+  assert(zee_input_install()==0&&syscall_patches==4&&code_writes==1&&vsh_installed);
+  assert(zee_input_install()==0&&syscall_patches==4&&code_writes==1);
+diff --git a/src/ctrl_entry_plan.h b/src/ctrl_entry_plan.h
+new file mode 100644
+index 0000000..25c79ea
+--- /dev/null
++++ b/src/ctrl_entry_plan.h
+@@ -0,0 +1,23 @@
++/* Exact Sony two-argument Ctrl wrapper plan; no writes in this helper. */
++#ifndef NODS_CTRL_ENTRY_PLAN_H
++#define NODS_CTRL_ENTRY_PLAN_H
++#include "vsh_input_plan.h"
++typedef struct {uint32_t patch[4],trampoline[4][4];} NodsCtrlEntryPlan;
++static inline int nods_ctrl_entry_plan(uint32_t base,uint32_t size,const uint32_t entry[4],const uint32_t words[4][8],const uint32_t hook[4],const uint32_t trampoline[4],NodsCtrlEntryPlan *out){
++ if(!entry||!words||!hook||!trampoline||!out||(base&3)||base<0x88000000u||base>=0x88400000u||size<32||size>0x88400000u-base)return -1;
++ uint32_t common=0;
++ for(unsigned i=0;i<4;i++){
++  uint32_t a=entry[i];if((a&3)||a<base||a-base>size-32)return -2;
++  for(unsigned j=0;j<i;j++)if(a<entry[j]+32&&entry[j]<a+32)return -3;
++  const uint32_t *w=words[i];uint32_t delay=i?0x24070000u+i:0x00003821u;
++  if(w[0]!=0x27bdfff0u||w[1]!=0x00003021u||w[2]!=0xafbf0000u||(w[3]>>26)!=3||w[4]!=delay||w[5]!=0x8fbf0000u||w[6]!=0x03e00008u||w[7]!=0x27bd0010u)return -4;
++  uint32_t callee=((a+16)&0xf0000000u)|((w[3]&0x03ffffffu)<<2);
++  if((callee&3)||callee<base||callee-base>size-8||(i&&callee!=common))return -5;
++  common=callee;
++  if(hook[i]<0x88000000u||hook[i]>=0x88400000u||trampoline[i]<0x88000000u||trampoline[i]>0x883ffff0u||(trampoline[i]&15))return -6;
++  if(vsh_input_jump(a,hook[i],&out->patch[i])||vsh_input_jump(trampoline[i]+8,a+8,&out->trampoline[i][2]))return -7;
++  out->trampoline[i][0]=w[0];out->trampoline[i][1]=w[1];out->trampoline[i][3]=0;
++ }
++ return 0;
++}
++#endif
+diff --git a/tests/test_ctrl_entry_plan.c b/tests/test_ctrl_entry_plan.c
+new file mode 100644
+index 0000000..c0bc228
+--- /dev/null
++++ b/tests/test_ctrl_entry_plan.c
+@@ -0,0 +1,46 @@
++#include "ctrl_entry_plan.h"
++#include <assert.h>
++#include <stdio.h>
++static uint32_t base=0x880e9e00,entries[4],words[4][8],hooks[4],tramp[4];
++static void fixture(void){
++ for(unsigned i=0;i<4;i++){
++  entries[i]=base+0x1ae0+i*32;hooks[i]=0x88300100+i*0x40;tramp[i]=0x88302000+i*16;uint32_t j;
++  assert(!vsh_input_jump(entries[i]+12,base+0x1e70,&j));
++  uint32_t w[8]={0x27bdfff0,0x3021,0xafbf0000,j|0x04000000u,i?0x24070000u+i:0x3821,0x8fbf0000,0x03e00008,0x27bd0010};memcpy(words[i],w,sizeof(w));
++ }
++}
++static void plain(uint32_t w,uint32_t r[32],uint32_t *saved){
++ unsigned op=w>>26,rs=(w>>21)&31,rt=(w>>16)&31,rd=(w>>11)&31;
++ if(!w)return;
++ if(op==9)r[rt]=r[rs]+(int16_t)w;
++ else if(op==0&&((w&63)==0x21))r[rd]=r[rs]+r[rt];
++ else if(op==0x2b){assert(r[rs]+(int16_t)w==0x09000ff0);*saved=r[rt];}
++ else if(op==0x23){assert(r[rs]+(int16_t)w==0x09000ff0);r[rt]=*saved;}
++ else assert(!"unsupported instruction");
++ r[0]=0;
++}
++static void execute(unsigned i,int result,const NodsCtrlEntryPlan *p){
++ uint32_t r[32]={0},saved=0,pc=tramp[i];unsigned calls=0;
++ r[4]=0x09010000;r[5]=3;r[6]=99;r[7]=99;r[29]=0x09001000;r[31]=0x88305000;
++ for(unsigned step=0;step<20&&pc!=0x88305000;step++){
++  if(pc==base+0x1e70){calls++;assert(r[4]==0x09010000&&r[5]==3&&r[6]==0&&r[7]==i);r[2]=(uint32_t)result;pc=r[31];continue;}
++  const uint32_t *list;unsigned offset;
++  if(pc>=tramp[i]&&pc<tramp[i]+16){list=p->trampoline[i];offset=(pc-tramp[i])/4;}
++  else {assert(pc>=entries[i]+8&&pc<entries[i]+32);list=words[i];offset=(pc-entries[i])/4;}
++  uint32_t w=list[offset],op=w>>26,next=pc+4;
++  if(op==2||op==3||w==0x03e00008){
++   next=w==0x03e00008?r[31]:((pc+4)&0xf0000000u)|((w&0x3ffffff)<<2);
++   if(op==3)r[31]=pc+8;
++   plain(list[offset+1],r,&saved);pc=next;
++  }else{plain(w,r,&saved);pc=next;}
++ }
++ assert(pc==0x88305000&&r[29]==0x09001000&&r[31]==0x88305000&&r[2]==(uint32_t)result&&calls==1);
++}
++int main(void){
++ fixture();NodsCtrlEntryPlan p;assert(!nods_ctrl_entry_plan(base,0x2850,entries,words,hooks,tramp,&p));
++ for(unsigned i=0;i<4;i++){execute(i,1,&p);execute(i,-7,&p);}
++ for(unsigned i=0;i<4;i++)for(unsigned j=0;j<8;j++){words[i][j]^=1;assert(nods_ctrl_entry_plan(base,0x2850,entries,words,hooks,tramp,&p)<0);words[i][j]^=1;}
++ fixture();tramp[0]++;assert(nods_ctrl_entry_plan(base,0x2850,entries,words,hooks,tramp,&p)<0);
++ fixture();entries[1]=entries[0];assert(nods_ctrl_entry_plan(base,0x2850,entries,words,hooks,tramp,&p)<0);
++ puts("PASS: exact Ctrl entry guards; four trampoline paths execute original once, preserve stack/RA/arguments and original success/error result");
++}
