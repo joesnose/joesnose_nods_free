@@ -1,0 +1,163 @@
+diff --git a/Makefile b/Makefile
+index 747a2cc..462563e 100644
+--- a/Makefile
++++ b/Makefile
+@@ -1,6 +1,6 @@
+ # PSP build configuration for joesnose_nods_free.prx
+ # Build from the repository root with: make -B release
+-TARGET = joesnose_nods_free
++TARGET = joesnose_nods_free_LME
+ OBJS = src/main.o src/completion_bridge.o src/zeemote_hid.o src/ds4_basic.o src/sony_controls.o src/zeemote_hooks.o src/zeemote_input.o
+ PSP_FW_VERSION = 660
+ BUILD_PRX = 1
+diff --git a/src/main.c b/src/main.c
+index 60fccb6..4ba6cfe 100644
+--- a/src/main.c
++++ b/src/main.c
+@@ -31,7 +31,7 @@
+ #include "ds4_transition.h"
+ #include "service_trace.h"
+ #include "zeemote_input.h"
+-PSP_MODULE_INFO("joesnose_nods_free",PSP_MODULE_KERNEL,0,64);
++PSP_MODULE_INFO("joesnose_nods_free_LME",PSP_MODULE_KERNEL,0,65);
+ /* Release build: no diagnostic file output or formatting. Keep the worker
+  * because it also owns reconnect, persistence and controller keepalive. */
+ static STMOD_HANDLER previous_handler;
+@@ -953,7 +953,7 @@ static int home_thread(SceSize args,void *argp){
+ int module_start(SceSize args,void *argp){
+  (void)args;(void)argp;
+  unsigned fw=sceKernelDevkitVersion();int model=sceKernelGetModel();
+- log_line("\nPSPGo Classic HID clean-baseline route 0.64 model=%d devkit=%08x\n",model,fw);
++ log_line("\nPSPGo Classic HID LME input test 0.65 (base 0.64) model=%d devkit=%08x\n",model,fw);
+  if(model!=4||(fw!=0x06060010&&fw!=0x06060110)){
+   log_line("UNSUPPORTED model/firmware; no patches installed\n");return -1;
+  }
+diff --git a/src/vsh_input_plan.h b/src/vsh_input_plan.h
+index 0527e85..f16eaa6 100644
+--- a/src/vsh_input_plan.h
++++ b/src/vsh_input_plan.h
+@@ -42,4 +42,23 @@ static inline int vsh_input_plan(uint32_t base,uint32_t size,uint32_t exported,
+  if(stub[0]!=original_stub||stub[1]!=0)return -3;
+  *patched=redirect|0x04000000u;return 0;
+ }
++/* LME's VshControl patches the CALL at +25c directly, rather than the
++ * stock import stub. Verify every other instruction and preserve its callee.
++ * Callers must establish that lme_base/size belong to the named VshControl. */
++static inline int vsh_input_lme_plan(uint32_t base,uint32_t size,uint32_t exported,
++ uint32_t ctrl,uint32_t lme_base,uint32_t lme_size,uint32_t hook,
++ const uint32_t context[VSH_INPUT_CONTEXT_WORDS],const uint32_t stub[2],
++ uint32_t *original,uint32_t *patched){
++ if(!context||!stub||!original||!patched||(context[23]>>26)!=3)return -1;
++ uint32_t jump_stub[2]={context[23]&~0x04000000u,0},callee;
++ // Reuse strict kernel module bounds; reject stock-target fallback here.
++ if(vsh_input_stub_target(base,0,lme_base,lme_size,jump_stub,&callee)||callee==0)return -2;
++ uint32_t normalized[VSH_INPUT_CONTEXT_WORDS],stock_call;
++ memcpy(normalized,context,sizeof(normalized));
++ if(vsh_input_jump(base+0x25c,base+0x5608,&stock_call))return -3;
++ normalized[23]=stock_call|0x04000000u;
++ int result=vsh_input_plan(base,size,exported,ctrl,hook,normalized,stub,patched);
++ if(result)return result;
++ *original=callee;return 0;
++}
+ #endif
+diff --git a/src/zeemote_input.c b/src/zeemote_input.c
+index 74665e9..3a2c4f4 100644
+--- a/src/zeemote_input.c
++++ b/src/zeemote_input.c
+@@ -112,19 +112,28 @@ int zee_input_install(void){
+  if(b>0xffffffffu-size||size<0x5610u)return install_fail(3,~0u);
+  uint32_t exported=(uint32_t)sctrlHENFindFunction("sceVshBridge_Driver","sceVshBridge",0xc6395c03);
+  SceModule *ark=sceKernelFindModuleByName("VshCtrl");
++ SceModule *lme=ark?NULL:sceKernelFindModuleByName("VshControl");
++ uint32_t lb=lme?lme->text_addr:0,ls=lme?lme->text_size:0;
+  uint32_t ab=ark?ark->text_addr:0,as=ark?ark->text_size:0;
+  uint32_t snapshot[VSH_INPUT_CONTEXT_WORDS],stub[2],patched,stub_target;
+  for(unsigned i=0;i<VSH_INPUT_CONTEXT_WORDS;i++)snapshot[i]=_lw(b+0x200+i*4);
+  stub[0]=_lw(b+0x5608);stub[1]=_lw(b+0x560c);
+- if(vsh_input_stub_target(b,(uint32_t)(uintptr_t)targets[2],ab,as,stub,&stub_target)){
+-  install_attempts=4;return install_fail(4,5);
++ uint32_t preserved_call=b+0x5608,stock_vsh_call;int plan;
++ if(vsh_input_jump(b+0x25c,b+0x5608,&stock_vsh_call))return install_fail(4,5);
++ if(lme&&snapshot[23]!=(stock_vsh_call|0x04000000u)){
++  plan=vsh_input_lme_plan(b,size,exported,(uint32_t)(uintptr_t)targets[2],lb,ls,
++    code_address((void *)vsh_read_pos),snapshot,stub,&preserved_call,&patched);
++ }else{
++  if(vsh_input_stub_target(b,(uint32_t)(uintptr_t)targets[2],ab,as,stub,&stub_target)){
++   install_attempts=4;return install_fail(4,5);
++  }
++  plan=vsh_input_plan(b,size,exported,stub_target,code_address((void *)vsh_read_pos),snapshot,stub,&patched);
+  }
+- int plan=vsh_input_plan(b,size,exported,stub_target,code_address((void *)vsh_read_pos),snapshot,stub,&patched);
+  if(plan){install_attempts=4;return install_fail(4,(unsigned)-plan);}
+- targets[4]=(Read)(uintptr_t)(b+0x5608);
++ targets[4]=(Read)(uintptr_t)preserved_call;
+  int irq=sceKernelCpuSuspendIntr();
+  if(installed){sceKernelCpuResumeIntr(irq);return 0;}
+- if((ark&&(ark->text_addr!=ab||ark->text_size!=as))||ctrl->text_addr!=cb||ctrl->text_size!=cs||bridge->text_addr!=b||bridge->text_size!=size){sceKernelCpuResumeIntr(irq);return install_fail(5,~0u);}
++ if((lme&&(lme->text_addr!=lb||lme->text_size!=ls))||(ark&&(ark->text_addr!=ab||ark->text_size!=as))||ctrl->text_addr!=cb||ctrl->text_size!=cs||bridge->text_addr!=b||bridge->text_size!=size){sceKernelCpuResumeIntr(irq);return install_fail(5,~0u);}
+  for(unsigned i=0;i<VSH_INPUT_CONTEXT_WORDS;i++)if(_lw(b+0x200+i*4)!=snapshot[i]){
+   sceKernelCpuResumeIntr(irq);return install_fail(6,4);
+  }
+diff --git a/tests/test_vsh_input_plan.c b/tests/test_vsh_input_plan.c
+index e3e41ba..cf5c8af 100644
+--- a/tests/test_vsh_input_plan.c
++++ b/tests/test_vsh_input_plan.c
+@@ -72,6 +72,13 @@ int main(void){
+  st[1]=1;assert(vsh_input_stub_target(vb,ctrl_read,0x88340000,0x8000,st,&dest)<0);
+  st[1]=0;st[0]|=0x04000000;assert(vsh_input_stub_target(vb,ctrl_read,0x88340000,0x8000,st,&dest)<0);
+ 
++ uint32_t lc[34],ls[2],lp,original;fixture(lc,ls);
++ uint32_t lj;assert(!vsh_input_jump(vb+0x25c,0x88340100,&lj));lc[23]=lj|0x04000000u;
++ assert(!vsh_input_lme_plan(vb,0x6aa8,vb+0x200,ctrl_read,0x88340000,0x8000,hook_address,lc,ls,&original,&lp)&&original==0x88340100);
++ for(unsigned i=0;i<34;i++)if(i!=23){lc[i]^=1;assert(vsh_input_lme_plan(vb,0x6aa8,vb+0x200,ctrl_read,0x88340000,0x8000,hook_address,lc,ls,&original,&lp)<0);lc[i]^=1;}
++ assert(vsh_input_lme_plan(vb,0x6aa8,vb+0x200,ctrl_read,0x08340000,0x8000,hook_address,lc,ls,&original,&lp)<0);
++ assert(vsh_input_lme_plan(vb,0x6aa8,vb+0x200,ctrl_read,0x88340200,0x8000,hook_address,lc,ls,&original,&lp)<0);
++ ls[1]=1;assert(vsh_input_lme_plan(vb,0x6aa8,vb+0x200,ctrl_read,0x88340000,0x8000,hook_address,lc,ls,&original,&lp)<0);
+  uint32_t c[34],s[2],patched;fixture(c,s);assert(!vsh_input_plan(vb,0x6aa8,vb+0x200,ctrl_read,hook_address,c,s,&patched));
+  for(unsigned i=0;i<34;i++){c[i]^=1;assert(vsh_input_plan(vb,0x6aa8,vb+0x200,ctrl_read,hook_address,c,s,&patched)<0);c[i]^=1;}
+  for(unsigned i=0;i<2;i++){s[i]^=1;assert(vsh_input_plan(vb,0x6aa8,vb+0x200,ctrl_read,hook_address,c,s,&patched)<0);s[i]^=1;}
+diff --git a/tests/test_zeemote_input.c b/tests/test_zeemote_input.c
+index 6e27e17..c770248 100644
+--- a/tests/test_zeemote_input.c
++++ b/tests/test_zeemote_input.c
+@@ -4,7 +4,7 @@
+ #include "test_vsh_input_plan.c"
+ #undef main
+ static uint64_t time_us;static unsigned syscall_patches,code_writes;
+-static int original_result=1,native_calls,mutate_on_irq,alias_bad,missing_bridge,ark_present;
++static int original_result=1,native_calls,mutate_on_irq,alias_bad,missing_bridge,ark_present,lme_present;
+ static unsigned app_mode=0x100;
+ static unsigned physical,firmware=0x06060010;
+ static uint32_t bridge_words[0x6000/4];
+@@ -17,7 +17,7 @@ unsigned sceKernelGetSystemTimeLow(void){return (unsigned)time_us;}
+ int sceKernelCpuSuspendIntr(void){if(mutate_on_irq){bridge_words[0x25c/4]^=1;mutate_on_irq=0;}return 0;}
+ void sceKernelCpuResumeIntr(int x){(void)x;}
+ void sceKernelDcacheWritebackAll(void){}void sceKernelIcacheInvalidateAll(void){}
+-SceModule *sceKernelFindModuleByName(const char *n){if(!strcmp(n,"sceController_Service"))return &ctrl_module;if(!strcmp(n,"sceImpose_Driver"))return impose_present?&impose_module:NULL;if(!strcmp(n,"VshCtrl"))return ark_present?&ark_module:NULL;assert(!strcmp(n,"sceVshBridge_Driver"));return missing_bridge?NULL:&bridge_module;}
++SceModule *sceKernelFindModuleByName(const char *n){if(!strcmp(n,"sceController_Service"))return &ctrl_module;if(!strcmp(n,"sceImpose_Driver"))return impose_present?&impose_module:NULL;if(!strcmp(n,"VshCtrl"))return ark_present?&ark_module:NULL;if(!strcmp(n,"VshControl"))return lme_present?&ark_module:NULL;assert(!strcmp(n,"sceVshBridge_Driver"));return missing_bridge?NULL:&bridge_module;}
+ unsigned sceKernelDevkitVersion(void){return firmware;}
+ unsigned sceKernelInitKeyConfig(void){return app_mode;}
+ uint32_t _lw(uint32_t a){if(a>=0x8838b290&&a<=0x8838b294)return impose_words[(a-0x8838b290)/4];assert(app_mode==0x100);assert(a>=vb&&a<vb+sizeof(bridge_words)&&!(a&3));return bridge_words[(a-vb)/4];}
+@@ -37,10 +37,21 @@ void sctrlHENPatchSyscall(void *from,void *to){
+ }
+ uint32_t sctrlFindImportByNID(SceModule *m,char *lib,unsigned nid){assert(m==&impose_module&&!strcmp(lib,"sceCtrl_driver")&&nid==0x2ba616af);return impose_bad_stub?impose_module.text_addr+impose_module.text_size:0x8838b290;}
+ static void setup(void){
+- overlay_installed=overlay_attempts=0;impose_present=impose_bad_stub=0;installed=vsh_installed=0;install_attempts=0;app_mode=0x100;syscall_patches=code_writes=0;ark_present=0;alias_bad=missing_bridge=mutate_on_irq=0;firmware=0x06060010;
++ overlay_installed=overlay_attempts=0;impose_present=impose_bad_stub=0;installed=vsh_installed=0;install_attempts=0;app_mode=0x100;syscall_patches=code_writes=0;ark_present=lme_present=0;alias_bad=missing_bridge=mutate_on_irq=0;firmware=0x06060010;
+  memset(bridge_words,0,sizeof(bridge_words));uint32_t c[34],s[2];fixture(c,s);memcpy(&bridge_words[0x200/4],c,sizeof(c));memcpy(&bridge_words[0x5608/4],s,sizeof(s));
+ }
+ int main(void){
++ setup();lme_present=1;assert(zee_input_install()==0&&vsh_installed&&(uintptr_t)originals[4]==vb+0x5608);
++ setup();lme_present=1;uint32_t lme_call;
++ assert(!vsh_input_jump(vb+0x25c,ark_module.text_addr+0x100,&lme_call));
++ bridge_words[0x25c/4]=lme_call|0x04000000u;
++ assert(zee_input_install()==0&&installed&&vsh_installed&&syscall_patches==4&&code_writes==1);
++ assert((uintptr_t)originals[4]==ark_module.text_addr+0x100);
++ setup();lme_present=1;bridge_words[0x25c/4]=lme_call|0x04000000u;bridge_words[0x260/4]=1;
++ assert(zee_input_install()<0&&!syscall_patches&&!code_writes);
++ setup();lme_present=1;bridge_words[0x25c/4]=lme_call|0x04000000u;mutate_on_irq=1;
++ assert(zee_input_install()<0&&!syscall_patches&&!code_writes);
++
+  setup();uint32_t saved_stub[2];memcpy(saved_stub,&bridge_words[0x5608/4],sizeof(saved_stub));
+  assert(zee_input_install()==0&&syscall_patches==4&&code_writes==1&&vsh_installed);
+  assert(zee_input_install()==0&&syscall_patches==4&&code_writes==1);
