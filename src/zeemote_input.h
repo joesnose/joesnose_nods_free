@@ -19,4 +19,6 @@ int zee_input_home_take(void);
 void zee_input_clear(void);
 /* Refreshes an existing state only; called by the trusted live-session monitor. */
 void zee_input_keepalive(void);
+/* Worker-only power policy: live input or trusted session keepalive, never stale state. */
+int zee_input_session_live(void);
 #endif

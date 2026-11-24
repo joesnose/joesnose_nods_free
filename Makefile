@@ -6,7 +6,7 @@ PSP_FW_VERSION = 660
 BUILD_PRX = 1
 USE_KERNEL_LIBC = 1
 USE_KERNEL_LIBS = 1
-LIBS = -lpspsystemctrl_kernel -lgcc
+LIBS = -lpsppower_driver -lpspsystemctrl_kernel -lgcc
 CFLAGS = -O2 -G0 -std=gnu11 -Wall -Wextra -Werror -fno-pic
 PSPSDK = $(shell psp-config --pspsdk-path)
 include $(PSPSDK)/lib/build_prx.mak

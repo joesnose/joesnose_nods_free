@@ -1,0 +1,37 @@
+PASS: status result selectors, fresh budgets, native errors and argument/output forwarding, pending disconnect eligibility, all31 firmware guards and invalid plans
+PASS: exact Ctrl entry guards; four trampoline paths execute original once, preserve stack/RA/arguments and original success/error result
+PASS: DS4 basic01 exact10-byte reports, face/shoulder/Share/Options/PS/hat combinations, counter neutrality, axis bounds, malformed neutral, Sony05c4/09cc policy, projected SDP encoding and descriptor parse; synthetic packets only
+PASS: DS4 exact identity/slot/service/country-attribute/default encoding/capacity/mode/timeout policy, non-DS4 isolation and all10 relocated native call/consumer guards
+PASS: one setup per confirmed link generation, duplicate/failed/disconnected links, readiness gating, independent slots, stale command continuation refusal and all33 native ABI guards
+PASS: selected fingerprint + real-link gating, cached non-DS4 refusal, passive auto selection, disconnect/error invalidation, local parser/country/descriptor metadata, context/backend bounds and all40 guarded native instructions
+PASS: preferred Sony VSH/GAME saved-profile reconnect, native errors preserved, real-link metadata authorization, incoming-link/active rejection and stale target isolation
+PASS: published DualSense minimal BT01 sample layout, buttons/PS, exact054c:0ce6 policy, name/reconnect selection, genuine-link gating, descriptor projection and disconnect; no hardware pairing claim
+PASS: fresh aligned eight-slot queries, any bounded UTF16 name, exact ID/size, native HID flags, unique target, native mode selection, active/ambiguous/error rejection and once-only original connection result
+PASS: generic hat-only pad, joystick without hat, standard D-pad usages, generic button ordering/axes and rejection of keyboard/consumer application collections
+PASS: 120 executable MIPS HID-route cases, preserved registers, profile gating and patch guards
+PASS: PS connect-hold suppression, press/release/tap/hold, one native press per edge, disconnect/stale/disabled rejection, timer wrap and native HOME ABI/context guards
+PASS: Bluetooth address output bounds, byte order and relocated read-query guard
+PASS: executable constructor-wrapper MIPS preserves record84/PIN32, saved ABI and stock return; null/nonmatch/audio/DS3 isolation; clone changes only category; category8 cleanup versus category2 HID action
+PASS: incoming call-site guards and inclusive receive-length bounds; ten-byte packet has six payload bytes
+PASS: lifecycle begin/end metadata, exact original calls/args/results, nine native teardown guards and bounded kernel-thread name filter
+PASS: actual NES30 Pro Bluetooth descriptor86 bytes, reportID3, payload9, fields21; synthetic neutral/button/hat/axes and wrong-ID/truncated-report rejection
+PASS: NES30 exact identity/attribute/slot/mode and97-byte SDP encoding/capacity, production descriptor parse, all8 native guards and bounded fragment metadata
+PASS: passive six-argument receive forwarding/exact results, bounded numeric metadata, no PIN/raw packet logging or mutation, all nine caller guards and unchanged failure output
+PASS: PIN/no-PIN/profile prologues, relocated address guards, trampoline semantics, jumps and discovery guards
+PASS: preferred NES30 selected among3 devices; fresh identity/name/address checks, mode/flag changes, padding, invalid checksum, missing/reassigned target, active rejection and once-only original result
+PASS: production query/connect path, fresh aligned records, all 65536 flag combinations, fail-preserving behavior and no retry
+PASS: 65536 executable MIPS CoD-independence cases, ASCII-case-insensitive exact UTF16 name/NUL and real-record gating, restored DS4 exact-name/class rule, original predicate preservation, unchanged record/registers and all context guards
+PASS: observed Wireless Controller0402-to0602 preferred/unique/manual reconnect retains generic mode1, DS3/Free0602 remain legacy0, all flag words, exact bounded UTF16/ID/size validation, errors/explicit modes/one-attempt behavior
+PASS: guarded Impose direct positive-peek import, menu merge, once-only original, unchanged Ctrl chain, delay/target/bounds refusal and bounded absence retries; GAME positive/negative read/peek and original errors with all VSH memory accesses forbidden; VSH four syscall-table redirects plus one verified call write only; unchanged import/current-export chain, all-context/alias/firmware/race fail-closed guards, bounded attempts, fifth-route positive merge, once-only original errors and stale/disconnect neutral
+PASS: neutral/live session, exact stale boundary, trusted keepalive, disconnect, reconnect and clock wrap
+PASS: all65536 event IDs and32 argument/mode combinations, fresh native budget, exact six-argument once-only forwarding/results and10 SDP call-context guards
+SLC call guard tests passed
+PASS: confirmed FPS defaults, all14 basic buttons, sticks/diagonals, trigger axes, combos, inversion, strongest-axis/cancellation, atomic config errors, CRLF/BOM, malformed reports and shipped full config
+PASS: warm-start raw/export ABI, DS4/DualSense target matching, two live native snapshots, address/event/backend/race rejection and disconnect invalidation
+PASS: all response IDs and timeout/callback/identity/worker/main/unrelated-role combinations, fresh native timeout, once-only exact forwarding, native errors/results and all11 firmware guards
+PASS: slot4 DS4 to slot5 DualSense selected before metadata, genuine-link gating, persistence and incoming-event order, disconnect/failure neutral, malformed/non-Sony identity isolation
+PASS: reboot/thread/ownership/authorization/op/arguments matrix; native results and exactly-once fallback; reboot scope restoration
+PASS: full VSH ABI/context and unchanged import guards; emitted call executes whole bridge, count*16 validation, K1/stack/callee-register restoration and once-only current-export chain; original errors preserved
+PASS: real descriptor parser plus mocked native init/report/term callbacks, generic descriptor ownership with native DS3 exclusion and Zeemote-specific mapping, full/stripped IDs, malformed neutral, disconnect invalidation, generation race, untouched DS3 path and deferred logging
+PASS: guarded Impose direct positive-peek import, menu merge, once-only original, unchanged Ctrl chain, delay/target/bounds refusal and bounded absence retries; GAME positive/negative read/peek and original errors with all VSH memory accesses forbidden; VSH four syscall-table redirects plus one verified call write only; unchanged import/current-export chain, all-context/alias/firmware/race fail-closed guards, bounded attempts, fifth-route positive merge, once-only original errors and stale/disconnect neutral
+PASS: descriptor-derived numbered/unnumbered reports, all buttons/hats, signed cross-byte axes, neutral/extremes, bounds/truncation/malformed rejection and unchanged failure outputs (synthetic HID fixtures; no Free hardware layout claim)

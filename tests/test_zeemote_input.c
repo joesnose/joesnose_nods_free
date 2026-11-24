@@ -40,7 +40,10 @@ static void setup(void){
  overlay_installed=overlay_attempts=0;impose_present=impose_bad_stub=0;installed=vsh_installed=0;install_attempts=0;app_mode=0x100;syscall_patches=code_writes=0;ark_present=0;alias_bad=missing_bridge=mutate_on_irq=0;firmware=0x06060010;
  memset(bridge_words,0,sizeof(bridge_words));uint32_t c[34],s[2];fixture(c,s);memcpy(&bridge_words[0x200/4],c,sizeof(c));memcpy(&bridge_words[0x5608/4],s,sizeof(s));
 }
-int main(void){
+#ifndef ZEE_INPUT_TEST_ENTRY
+#define ZEE_INPUT_TEST_ENTRY main
+#endif
+int ZEE_INPUT_TEST_ENTRY(void){
  setup();uint32_t saved_stub[2];memcpy(saved_stub,&bridge_words[0x5608/4],sizeof(saved_stub));
  assert(zee_input_install()==0&&syscall_patches==4&&code_writes==1&&vsh_installed);
  assert(zee_input_install()==0&&syscall_patches==4&&code_writes==1);

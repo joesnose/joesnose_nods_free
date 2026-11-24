@@ -1,0 +1,194 @@
+[
+  {
+    "variant": "ARK",
+    "check": "check_completion_compile.py",
+    "passed": true,
+    "output": "{\"frames\": {\"completion_status_receive\": 40, \"completion_disconnect_receive\": 40, \"completion_begin\": 16, \"completion_end\": 16}, \"bridge_frame\": 0, \"bridge_s2_to_sixth_arg\": true, \"bridge_s4_to_seventh_arg\": true, \"original_calls_per_path\": [1, 1], \"helpers_irq_only\": true, \"logger_frame\": 456, \"pass_check\": true}\n"
+  },
+  {
+    "variant": "ARK",
+    "check": "check_controls_compile.py",
+    "passed": true,
+    "output": "{\"mapper_frame\": 64, \"mapper_calls_basic_validation_only\": true, \"config_loader_frame\": 264, \"parser_frame\": 464, \"no_file_or_parse_calls_on_report_stack\": true, \"pass_check\": true}\n"
+  },
+  {
+    "variant": "ARK",
+    "check": "check_country_compile.py",
+    "passed": true,
+    "output": "{\"country_wrapper_frame\": 48, \"original_tail_once\": true, \"seven_arguments_preserved\": true, \"direct_calls_irq_or_metadata_only\": true, \"pass_check\": true}\n"
+  },
+  {
+    "variant": "ARK",
+    "check": "check_diag_compile.py",
+    "passed": true,
+    "output": "{\"logging_disabled\": true, \"sink_calls_none\": true, \"formatter_absent\": true, \"log_paths_absent\": true, \"state_file_writer_only\": [\"logger_thread\"], \"sink_frame\": 32, \"pass_check\": true}\n"
+  },
+  {
+    "variant": "ARK",
+    "check": "check_ds4_compile.py",
+    "passed": true,
+    "output": "{\"ds4_decoder_frame\": 0, \"decoder_calls_none\": true, \"report_callback_frame\": 56, \"callback_direct_calls_whitelisted\": true, \"ds4_known_budget_with_native_allowance\": 400, \"report_thread_bytes\": 1024, \"pass_check\": true}\n"
+  },
+  {
+    "variant": "ARK",
+    "check": "check_hid_stack.py",
+    "passed": true,
+    "output": "{\n  \"frames\": {\n    \"receive_report\": 56,\n    \"zee_decode_report\": 64,\n    \"zee_input_update_kind\": 24,\n    \"zee_input_install\": 392,\n    \"sony_controls_decode\": 64,\n    \"ds4_basic_decode\": 0\n  },\n  \"direct_installer_call\": false,\n  \"known_direct_path_minimum\": 248,\n  \"conservative_known_budget_with_allowance\": 400,\n  \"report_thread_bytes\": 1024,\n  \"minimum_remaining_bytes\": 624,\n  \"pass\": true\n}\n"
+  },
+  {
+    "variant": "ARK",
+    "check": "check_home_compile.py",
+    "passed": true,
+    "output": "{\"home_worker_frame\": 168, \"home_worker_stack\": 4096, \"worker_native_indirect_calls\": 2, \"input_paths_irq_and_clock_only\": true, \"pass_check\": true}\n"
+  },
+  {
+    "variant": "ARK",
+    "check": "check_input_timing_compile.py",
+    "passed": true,
+    "output": "{\"hot_path_frames\": {\"zee_input_update_kind\": 24, \"merge\": 48}, \"low32_clock\": true, \"no_division_or_file_calls_in_hot_paths\": true, \"pass_check\": true}\n"
+  },
+  {
+    "variant": "ARK",
+    "check": "check_lifecycle_compile.py",
+    "passed": true,
+    "output": "{\n  \"observers\": {\n    \"context_remove_trace\": {\n      \"frame\": 16,\n      \"min_original_calls_per_return\": 1,\n      \"max_original_calls_per_return\": 1,\n      \"direct_calls_only_irq\": true\n    },\n    \"keyboard_term_trace\": {\n      \"frame\": 24,\n      \"min_original_calls_per_return\": 1,\n      \"max_original_calls_per_return\": 1,\n      \"direct_calls_only_irq\": true\n    },\n    \"mouse_term_trace\": {\n      \"frame\": 24,\n      \"min_original_calls_per_return\": 1,\n      \"max_original_calls_per_return\": 1,\n      \"direct_calls_only_irq\": true\n    }\n  },\n  \"worker_profiler_frame\": 0,\n  \"worker_stack_bytes\": 8192,\n  \"pass_check\": true\n}\n"
+  },
+  {
+    "variant": "ARK",
+    "check": "check_local_compile.py",
+    "passed": true,
+    "output": "{\"frames\": {\"local_pnp_query\": 32, \"local_attribute_query\": 48, \"local_read_start\": 24, \"ds4_context_authorized\": 16, \"ds4_read_trace\": 24, \"ds4_is_active\": 24}, \"direct_calls_irq_or_metadata_only\": true, \"conservative_report_budget\": 456, \"report_thread_bytes\": 1024, \"pass_check\": true}\n"
+  },
+  {
+    "variant": "ARK",
+    "check": "check_nes30_compile.py",
+    "passed": true,
+    "output": "{\"descriptor_wrapper_frame\": 56, \"service_command_frame\": 32, \"seven_argument_saves_restores_present\": true, \"command_original_calls\": [1, 1], \"no_native_file_logging\": true, \"withdrawn_observer_absent\": true, \"pass_check\": true}\n"
+  },
+  {
+    "variant": "ARK",
+    "check": "check_pair_trace.py",
+    "passed": true,
+    "output": "{\n  \"frame\": 32,\n  \"indirect_calls\": 1,\n  \"six_arguments_untouched_through_native_call\": true,\n  \"observer_direct_calls_only_irq_helpers\": true,\n  \"pass_check\": true\n}\n"
+  },
+  {
+    "variant": "ARK",
+    "check": "check_registration_stack.py",
+    "passed": true,
+    "output": "{\"frames\": {\"module_started\": 16, \"patch_registration\": 1456, \"native_pin_hybrid_plan\": 56, \"log_line\": 32}, \"known_owned_path\": 1528, \"native_allowance\": 1536, \"loader_stack\": 4096, \"full_native_stack_unproven\": true, \"pass_check\": true}\n"
+  },
+  {
+    "variant": "ARK",
+    "check": "check_sdp_compile.py",
+    "passed": true,
+    "output": "{\"wrapper_frame\": 40, \"original_calls_per_path\": [1, 1], \"metadata_helpers_irq_only\": true, \"withdrawn_entry_observer_absent\": true, \"pass_check\": true}\n"
+  },
+  {
+    "variant": "ARK",
+    "check": "check_sony_restore_compile.py",
+    "passed": true,
+    "output": "{\"frames\": {\"sony_restore_tick\": 512, \"sony_restore_snapshot\": 40, \"transition_reboot_walk\": 16, \"transition_control_receive\": 32, \"transition_control_bridge\": 0, \"zeemote_sony_quiesce_context\": 16}, \"recovery_callers\": [\"logger_thread\"], \"bridge_arguments_preserved\": true, \"pass_check\": true}\n"
+  },
+  {
+    "variant": "ARK",
+    "check": "check_status_compile.py",
+    "passed": true,
+    "output": "{\"wrapper_frame\": 40, \"original_calls_per_path\": [1, 1], \"no_file_logging\": true, \"pass_check\": true}\n"
+  },
+  {
+    "variant": "LME",
+    "check": "check_completion_compile.py",
+    "passed": true,
+    "output": "{\"frames\": {\"completion_status_receive\": 40, \"completion_disconnect_receive\": 40, \"completion_begin\": 16, \"completion_end\": 16}, \"bridge_frame\": 0, \"bridge_s2_to_sixth_arg\": true, \"bridge_s4_to_seventh_arg\": true, \"original_calls_per_path\": [1, 1], \"helpers_irq_only\": true, \"logger_frame\": 456, \"pass_check\": true}\n"
+  },
+  {
+    "variant": "LME",
+    "check": "check_controls_compile.py",
+    "passed": true,
+    "output": "{\"mapper_frame\": 64, \"mapper_calls_basic_validation_only\": true, \"config_loader_frame\": 264, \"parser_frame\": 464, \"no_file_or_parse_calls_on_report_stack\": true, \"pass_check\": true}\n"
+  },
+  {
+    "variant": "LME",
+    "check": "check_country_compile.py",
+    "passed": true,
+    "output": "{\"country_wrapper_frame\": 48, \"original_tail_once\": true, \"seven_arguments_preserved\": true, \"direct_calls_irq_or_metadata_only\": true, \"pass_check\": true}\n"
+  },
+  {
+    "variant": "LME",
+    "check": "check_diag_compile.py",
+    "passed": true,
+    "output": "{\"logging_disabled\": true, \"sink_calls_none\": true, \"formatter_absent\": true, \"log_paths_absent\": true, \"state_file_writer_only\": [\"logger_thread\"], \"sink_frame\": 32, \"pass_check\": true}\n"
+  },
+  {
+    "variant": "LME",
+    "check": "check_ds4_compile.py",
+    "passed": true,
+    "output": "{\"ds4_decoder_frame\": 0, \"decoder_calls_none\": true, \"report_callback_frame\": 56, \"callback_direct_calls_whitelisted\": true, \"ds4_known_budget_with_native_allowance\": 400, \"report_thread_bytes\": 1024, \"pass_check\": true}\n"
+  },
+  {
+    "variant": "LME",
+    "check": "check_hid_stack.py",
+    "passed": true,
+    "output": "{\n  \"frames\": {\n    \"receive_report\": 56,\n    \"zee_decode_report\": 64,\n    \"zee_input_update_kind\": 24,\n    \"zee_input_install\": 440,\n    \"sony_controls_decode\": 64,\n    \"ds4_basic_decode\": 0\n  },\n  \"direct_installer_call\": false,\n  \"known_direct_path_minimum\": 248,\n  \"conservative_known_budget_with_allowance\": 400,\n  \"report_thread_bytes\": 1024,\n  \"minimum_remaining_bytes\": 624,\n  \"pass\": true\n}\n"
+  },
+  {
+    "variant": "LME",
+    "check": "check_home_compile.py",
+    "passed": true,
+    "output": "{\"home_worker_frame\": 168, \"home_worker_stack\": 4096, \"worker_native_indirect_calls\": 2, \"input_paths_irq_and_clock_only\": true, \"pass_check\": true}\n"
+  },
+  {
+    "variant": "LME",
+    "check": "check_input_timing_compile.py",
+    "passed": true,
+    "output": "{\"hot_path_frames\": {\"zee_input_update_kind\": 24, \"merge\": 48}, \"low32_clock\": true, \"no_division_or_file_calls_in_hot_paths\": true, \"pass_check\": true}\n"
+  },
+  {
+    "variant": "LME",
+    "check": "check_lifecycle_compile.py",
+    "passed": true,
+    "output": "{\n  \"observers\": {\n    \"context_remove_trace\": {\n      \"frame\": 16,\n      \"min_original_calls_per_return\": 1,\n      \"max_original_calls_per_return\": 1,\n      \"direct_calls_only_irq\": true\n    },\n    \"keyboard_term_trace\": {\n      \"frame\": 24,\n      \"min_original_calls_per_return\": 1,\n      \"max_original_calls_per_return\": 1,\n      \"direct_calls_only_irq\": true\n    },\n    \"mouse_term_trace\": {\n      \"frame\": 24,\n      \"min_original_calls_per_return\": 1,\n      \"max_original_calls_per_return\": 1,\n      \"direct_calls_only_irq\": true\n    }\n  },\n  \"worker_profiler_frame\": 0,\n  \"worker_stack_bytes\": 8192,\n  \"pass_check\": true\n}\n"
+  },
+  {
+    "variant": "LME",
+    "check": "check_local_compile.py",
+    "passed": true,
+    "output": "{\"frames\": {\"local_pnp_query\": 32, \"local_attribute_query\": 48, \"local_read_start\": 24, \"ds4_context_authorized\": 16, \"ds4_read_trace\": 24, \"ds4_is_active\": 24}, \"direct_calls_irq_or_metadata_only\": true, \"conservative_report_budget\": 456, \"report_thread_bytes\": 1024, \"pass_check\": true}\n"
+  },
+  {
+    "variant": "LME",
+    "check": "check_nes30_compile.py",
+    "passed": true,
+    "output": "{\"descriptor_wrapper_frame\": 56, \"service_command_frame\": 32, \"seven_argument_saves_restores_present\": true, \"command_original_calls\": [1, 1], \"no_native_file_logging\": true, \"withdrawn_observer_absent\": true, \"pass_check\": true}\n"
+  },
+  {
+    "variant": "LME",
+    "check": "check_pair_trace.py",
+    "passed": true,
+    "output": "{\n  \"frame\": 32,\n  \"indirect_calls\": 1,\n  \"six_arguments_untouched_through_native_call\": true,\n  \"observer_direct_calls_only_irq_helpers\": true,\n  \"pass_check\": true\n}\n"
+  },
+  {
+    "variant": "LME",
+    "check": "check_registration_stack.py",
+    "passed": true,
+    "output": "{\"frames\": {\"module_started\": 16, \"patch_registration\": 1456, \"native_pin_hybrid_plan\": 56, \"log_line\": 32}, \"known_owned_path\": 1528, \"native_allowance\": 1536, \"loader_stack\": 4096, \"full_native_stack_unproven\": true, \"pass_check\": true}\n"
+  },
+  {
+    "variant": "LME",
+    "check": "check_sdp_compile.py",
+    "passed": true,
+    "output": "{\"wrapper_frame\": 40, \"original_calls_per_path\": [1, 1], \"metadata_helpers_irq_only\": true, \"withdrawn_entry_observer_absent\": true, \"pass_check\": true}\n"
+  },
+  {
+    "variant": "LME",
+    "check": "check_sony_restore_compile.py",
+    "passed": true,
+    "output": "{\"frames\": {\"sony_restore_tick\": 512, \"sony_restore_snapshot\": 40, \"transition_reboot_walk\": 16, \"transition_control_receive\": 32, \"transition_control_bridge\": 0, \"zeemote_sony_quiesce_context\": 16}, \"recovery_callers\": [\"logger_thread\"], \"bridge_arguments_preserved\": true, \"pass_check\": true}\n"
+  },
+  {
+    "variant": "LME",
+    "check": "check_status_compile.py",
+    "passed": true,
+    "output": "{\"wrapper_frame\": 40, \"original_calls_per_path\": [1, 1], \"no_file_logging\": true, \"pass_check\": true}\n"
+  }
+]

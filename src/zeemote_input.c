@@ -53,6 +53,7 @@ void zee_input_update(const ZeeState *s){zee_input_update_kind(s,0);}
 void zee_input_home_enable(int enabled){int irq=sceKernelCpuSuspendIntr();home_enabled=enabled;zee_home_reset(&home_button);sceKernelCpuResumeIntr(irq);}
 int zee_input_home_take(void){int irq=sceKernelCpuSuspendIntr();unsigned now=now_us();int result=zee_home_take(&home_button,home_enabled,active&&(unsigned)(now-last_us)<1500000u,now);sceKernelCpuResumeIntr(irq);return result;}
 void zee_input_keepalive(void){int irq=sceKernelCpuSuspendIntr();if(active)last_us=now_us();sceKernelCpuResumeIntr(irq);}
+int zee_input_session_live(void){int irq=sceKernelCpuSuspendIntr();int live=active&&has_report&&(unsigned)(now_us()-last_us)<1500000u;sceKernelCpuResumeIntr(irq);return live;}
 void zee_input_clear(void){int irq=sceKernelCpuSuspendIntr();active=0;has_report=0;remote_sony=0;zee_home_reset(&home_button);memset(&remote,0,sizeof(remote));sceKernelCpuResumeIntr(irq);}
 static int merge(unsigned index,SceCtrlData *p,int count){
  int irq_count=sceKernelCpuSuspendIntr();read_counts[index]++;sceKernelCpuResumeIntr(irq_count);

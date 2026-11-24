@@ -16,15 +16,21 @@ Controllers tested in this project include DualShock 4, DualSense and 8BitDo NES
 
 ## Requirements
 
-- A PSPGO, only tested on ARK custom firmware.
+- A PSPGO, standard build targets ARK; a separate 6.60 LME build is included.
 - nods free plugin
 - A compatible controller. I know it works with Dualshock4, Dualsense, 8bitdo nes30 pro, Steel series zeemote and the controller for the original Gamestick. It may work with other but these all required individual per controller tweaking.
 
 ## Downloads
 
-[Download v0.64](https://github.com/joesnose/joesnose_nods_free/releases/tag/v0.64) · [PRX](https://raw.githubusercontent.com/joesnose/joesnose_nods_free/f31b3a6c6b1cfc6c66c07edb157bc76eafd50da9/downloads/v0.64/joesnose_nods_free.prx) · [Installation ZIP](https://raw.githubusercontent.com/joesnose/joesnose_nods_free/f31b3a6c6b1cfc6c66c07edb157bc76eafd50da9/downloads/v0.64/joesnose_nods_free-v0.64.zip) · [Source ZIP](https://raw.githubusercontent.com/joesnose/joesnose_nods_free/f31b3a6c6b1cfc6c66c07edb157bc76eafd50da9/downloads/v0.64/joesnose_nods_free-v0.64-source.zip)
+[ARK v0.65 ZIP](https://github.com/joesnose/joesnose_nods_free/raw/refs/heads/main/downloads/v0.65/joesnose_nods_free-v0.65.zip) · [LME v0.71 ZIP](https://github.com/joesnose/joesnose_nods_free/raw/refs/heads/main/downloads/v0.65/joesnose_nods_free_LME-v0.71.zip) · [Both sources](https://github.com/joesnose/joesnose_nods_free/raw/refs/heads/main/downloads/v0.65/joesnose_nods_free-v0.65-source.zip) · [Release notes](https://github.com/joesnose/joesnose_nods_free/releases/tag/v0.65) · [Checksums](downloads/v0.65/SHA256SUMS.txt)
 
-Exact release files and checksums are also available in [downloads/v0.64](downloads/v0.64). The buildable project is at the repository root.
+Choose the ZIP matching your firmware. ARK uses `joesnose_nods_free.prx`; 6.60 LME uses `joesnose_nods_free_LME.prx`. **Enable only one NODS variant.** Replace that PRX, preserve your controls/target files and fully shut down/restart the PSP. The separate LME source and instructions are in [variants/lme](variants/lme/README.md). Historical v0.64 downloads remain in `downloads/v0.64`.
+
+## Keep-awake update
+
+The resident worker refreshes display and automatic-suspend timers every 500 ms while a live controller session exists, including neutral input. Disconnects, cleared input and stale sessions stop the refresh. It does not lock the power switch or change the configured timeout values. Pairing, mappings, reconnect and HOME routing are retained; the LME input guards match its clean v0.70 base.
+
+Power calls run in the worker, outside the HID callback and outside the input snapshot's interrupt-disabled section. Both PRXs were built with compiler warnings treated as errors. Host and compiled-code checks passed; physical PSP Go screen timeout and sleep/wake checks remain necessary. See [validation/result.json](validation/result.json).
 
 ## Installation
 

@@ -1,0 +1,5 @@
+Add this line to both seplugins/vsh.txt and seplugins/game.txt, adjusting the storage device/path if needed:
+
+ef0:/seplugins/joesnose_nods_free_LME.prx 1
+
+Disable the standard ARK NODS plugin and other NODS test copies.

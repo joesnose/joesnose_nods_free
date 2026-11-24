@@ -5,6 +5,7 @@
 #include <pspsysclib.h>
 #include <pspsdk.h>
 #include <pspinit.h>
+#include <psppower.h>
 #include <systemctrl.h>
 #include <stdint.h>
 #include <string.h>
@@ -31,7 +32,7 @@
 #include "ds4_transition.h"
 #include "service_trace.h"
 #include "zeemote_input.h"
-PSP_MODULE_INFO("joesnose_nods_free",PSP_MODULE_KERNEL,0,64);
+PSP_MODULE_INFO("joesnose_nods_free",PSP_MODULE_KERNEL,0,65);
 /* Release build: no diagnostic file output or formatting. Keep the worker
  * because it also owns reconnect, persistence and controller keepalive. */
 static STMOD_HANDLER previous_handler;
@@ -648,7 +649,7 @@ static void input_timing_tick(void){
 static void auto_reconnect_tick(void);
 static int logger_thread(SceSize args,void *argp){
  (void)args;(void)argp;link_setup_thread=sceKernelGetThreadId();
- for(;;){sceKernelDelayThread(500000);drain_slc_events();drain_pair_events();zeemote_input_log_tick(NULL);preferred_target_tick();auto_reconnect_tick();ds4_link_setup_tick();status_log_tick();completion_tick();sdp_tick();service_tick();input_timing_tick();}
+ for(;;){sceKernelDelayThread(500000);drain_slc_events();drain_pair_events();zeemote_input_log_tick(NULL);preferred_target_tick();if(zee_input_session_live())scePowerTick(PSP_POWER_TICK_ALL);auto_reconnect_tick();ds4_link_setup_tick();status_log_tick();completion_tick();sdp_tick();service_tick();input_timing_tick();}
  return 0;
 }
 static int current_profile_query(int index,void *record){

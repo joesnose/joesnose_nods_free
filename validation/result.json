@@ -1,0 +1,21 @@
+{
+  "ark_version": "0.65",
+  "lme_version": "0.71",
+  "lme_input_routing_retained_from": "clean v0.70",
+  "unchanged_lme_files": [
+    "zeemote_hooks.c",
+    "zeemote_hooks.h",
+    "vsh_input_plan.h",
+    "ctrl_entry_plan.h",
+    "ds4_basic.c",
+    "sony_controls.c",
+    "completion_bridge.S"
+  ],
+  "host_tests": 71,
+  "compiled_checks": 34,
+  "hardware_test": false,
+  "prx_sha256": {
+    "joesnose_nods_free.prx": "e55a3a23350c3f2ed2c6ba19708e72c258c8e8c3e9d8228bc70f4fc8da56cf6c",
+    "variants/lme/joesnose_nods_free_LME.prx": "0ba823df966893b3578a03ec20f63b4ad5be7bc0dbdff0444f3b76713fe523df"
+  }
+}

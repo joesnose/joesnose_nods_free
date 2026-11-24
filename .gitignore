@@ -11,3 +11,10 @@
 **/__pycache__/
 *.pyc
 *.log
+
+/variants/lme/*.elf
+/variants/lme/*.prx
+/variants/lme/src/*.o
+/release-assets/
+
+**/tests/build/
